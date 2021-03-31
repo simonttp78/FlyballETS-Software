@@ -48,7 +48,7 @@
 #include <BatterySensor.h>
 
 /*List of pins and the ones used (Lolin32 board):
-   - 34: S1 (handler side) photoelectric sensor
+   - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
    - 33: S2 (box side) photoelectric sensor | with jtag port used for LCD Data4
 
    - 27: LCD Data7
@@ -372,13 +372,13 @@ void loop()
    }
 
    //Race start (serial command only)
-   if (bSerialStringComplete && strSerialData == "START")
+   if (bSerialStringComplete && strSerialData == "START" && (RaceHandler.RaceState == RaceHandler.RESET))
    {
       StartRaceMain();
    }
 
    //Race stop (serial command only)
-   if (bSerialStringComplete && strSerialData == "STOP")
+   if (bSerialStringComplete && strSerialData == "STOP" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
    {
       StopRaceMain();
    }
@@ -443,7 +443,20 @@ void loop()
    //Update battery percentage to display
    iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-   LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+   String sBatteryPercentage;
+   if (iBatteryPercentage == 0)
+   {
+      sBatteryPercentage = "LOW";
+   }
+   else
+   {
+      sBatteryPercentage = String(iBatteryPercentage);
+   }
+   while (sBatteryPercentage.length() < 3)
+   {
+      sBatteryPercentage = " " + sBatteryPercentage;
+   }
+   LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
 #endif
 
    //Update team netto time
@@ -505,13 +518,13 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((GET_MICROS / 1000 - llLastSerialOutput) > 500)
+   if ((GET_MICROS / 1000 - llLastSerialOutput) > 60000)
    {
-      //ESP_LOGI(__FILE__, "%llu: ping! analog: %i ,voltage is: %i, this is %i%%", GET_MICROS / 1000, BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       /*
-      if (RaceHandler.RaceState == RaceHandler.RUNNING)
+      if (RaceHandler.RaceState == RaceHandler.RUNNING)Ś
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
@@ -581,23 +594,6 @@ void Sensor1Wrapper()
 }
 
 /// <summary>
-///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
-/// </summary>
-void StartStopRace()
-{
-   llLastRCPress[0] = GET_MICROS / 1000;
-   if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
-   {
-      //Then start the race
-      StartRaceMain();
-   }
-   else //If race state is running or starting, we should stop it
-   {
-      StopRaceMain();
-   }
-}
-
-/// <summary>
 ///   Start a race.
 /// </summary>
 void StartRaceMain()
@@ -615,6 +611,23 @@ void StopRaceMain()
 {
    RaceHandler.StopRace();
    LightsController.DeleteSchedules();
+}
+
+/// <summary>
+///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
+/// </summary>
+void StartStopRace()
+{
+   llLastRCPress[0] = GET_MICROS / 1000;
+   if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
+   {
+      //Then start the race
+      StartRaceMain();
+   }
+   else //If race state is running or starting, we should stop it
+   {
+      StopRaceMain();
+   }
 }
 
 /// <summary>

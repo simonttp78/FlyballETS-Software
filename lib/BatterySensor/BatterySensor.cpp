@@ -49,17 +49,38 @@ void BatterySensorClass::CheckBatteryVoltage()
       }
       _iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
 
-#ifdef ESP32
-      //For ESP32 we're using +12V--R33K--PIN--R10K--GND circuit
-      //This voltage divider allows reading 0-14.19V
-      //Also ESP32 has 12-bit ADC, so 3.3V = 4095 analogRead value
+      //For ESP32 we're using +12V--R33k--PIN--R10k--GND circuit, from equation Uo/10000 = (Ui - Uo)/33000 --> we have divider value Ui/Uo = 4.3
+      //ESP32 has 12-bit ADC (0-4095), theoretically 3.3V = 4095 in analogRead value
+      //Theoreticallly this voltage divider allows reading 0-14.19V (3.3V multplied by divider 4.3),
+      //In order to measure true range I recommend to activate in conifg.h "BatteryCalibration" and build table
+      //of true ready by ESP32 analogRead value for different power supply (lab power supply) points. In my case it was
+      // power supply (V)   -->  analogRead from LCD
+      //  9,5                       2497
+      // 10,5                       2768
+      // 11,5                       3071
+      // 12,0                       3251
+      // 12,5                       3456
+      // 13,0                       3683
+      // 13,5                       3952
+      // 13,75                      4094
+      //Theoretical voltage divider is 4.3, but true one based on comparision of
+      //supply voltage and pin35/R10K voltage was in my case 4.3223
+      //
+      //For easy simplification of analogRead mapping to R10k/pin35 voltage linear function map() can be used,
+      //but in practice characteristic is not linear so for more accurate values calculated function should be used.
+      //I use Excel for that with first selecting best maching trend line and later calucate it using this fucntion
+      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 4.3223)
+      //and x is range of cells (in one row, not column!) with analogRead values
+      // equation: y = c2 * x^2 + c1 * x + b
+      // c2: =INDEKS(REGLINP(y; x^{1;2});1)
+      // c1: =INDEKS(REGLINP(y; x^{1;2});1;2)
+      //  b: =INDEKS(REGLINP(y; x^{1;2});1;3)
+      
       //First calculate voltage at ADC pin
-      int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 315);
-      _iBatteryVoltage = iPinVoltage * 4.3;  // 14.19/3.3=4.3
-#else
-      float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
-      _iBatteryVoltage = fMeasuredVoltage * 2.5 * 100;
-#endif
+      //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
+      double dPinVoltage = (-0.00017784)*pow(_iAverageBatteryReading,2) + 1.783677*_iAverageBatteryReading - 1145.2;
+      int iPinVoltage = dPinVoltage;
+      _iBatteryVoltage = iPinVoltage * 4.3223;
       _iNumberOfBatteryReadings = 0;
    }
 }
@@ -85,19 +106,23 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 960)
+   #if BatteryCalibration
+      return _iAverageBatteryReading;
+   #else
+   if (_iBatteryVoltage < 10900)
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 1260)
+   else if (_iBatteryVoltage > 12460)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 960, 1260, 0, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12460, 1, 100);
       return iBatteryPercentage;
    }
+   #endif
 }
 
 /// <summary>
