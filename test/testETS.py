@@ -105,17 +105,17 @@ while argument_number < len(sys.argv):
         flatten_listOfRaces = list(flat2gen(listOfRaces))
     elif raceToRun == "-d":
         debugmode = True
-    elif raceToRun == "all" or raceToRun == "stab":
+    elif raceToRun == "all":
         initial_count = 0
-        if raceToRun == "stab":
-            argument_number += 1
-            numberOfStabilityLoops = int(sys.argv[argument_number])
-            if numberOfStabilityLoops < 1:
-                invalidInput = True
         for Path in os.listdir(os.getcwd() + "/testcases"):
             if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
                 flatten_listOfRaces.append(str(initial_count))
                 initial_count += 1
+    elif raceToRun == "loop":
+            argument_number += 1
+            numberOfStabilityLoops = int(sys.argv[argument_number])
+            if numberOfStabilityLoops < 1:
+                invalidInput = True
     else:
         invalidInput = True
     argument_number += 1
