@@ -35,11 +35,18 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
+WifiManager wifiManager;
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
+   
+   // Print SW version
+   Serial.printf("Firmware version: %s\r\n", FW_VER);
+   
    SettingsManager.init();
+   SystemManager.init();
 
    // Configure sensors pins
    pinMode(iS1Pin, INPUT_PULLDOWN); // ESP32 has no pull-down resistor on pin 34, but it's pulled-down anyway by 1kohm resistor in voltage leveler circuit
@@ -79,9 +86,6 @@ void setup()
 
    // Configure GPS PPS pin
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
-
-   // Print SW version
-   Serial.printf("Firmware version: %s\r\n", FW_VER);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -128,8 +132,21 @@ void setup()
       &taskRace,
       1);
 
+   // Initialize BlueNodeHandler class
+   /*xTaskCreatePinnedToCore(
+      Core1Blue,
+      "Blue",
+      16384,
+      NULL,
+      1,
+      &taskBlue,
+      1);*/
+
 #ifdef WiFiON
-   // Setup AP
+   //Init Wifi setup
+   wifiManager.SetupWiFi();
+   
+   /*// Setup AP
    WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_AP);
    String strAPName = SettingsManager.getSetting("APName");
@@ -139,11 +156,12 @@ void setup()
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-
+   */
    // configure webserver
    WebHandler.init(80);
 
    // OTA setup
+   String strAPPass = SettingsManager.getSetting("APPass");
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([](){
@@ -216,6 +234,8 @@ void loop()
       SDcardController.CheckSDcardSlot(iSDdetectPin);
    }
 
+   SystemManager.loop();
+
    // Check for serial events
    serialEvent();
    // Handle serial console commands
@@ -230,6 +250,7 @@ void loop()
    LCDController.Main();
 
 #ifdef WiFiON
+   wifiManager.WiFiLoop();
    // Handle WebSocket server
    WebHandler.loop();
 #endif
@@ -456,6 +477,8 @@ void HandleSerialCommands()
    // Toggle race direction
    if (strSerialData == "direction")
       RaceHandler.ToggleRunDirection();
+   if (strSerialData == "opmode")
+      SystemManager.ToggleOpMode();
    // Set explicitly number of racing dogs
    if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
    {
@@ -473,7 +496,7 @@ void HandleSerialCommands()
    // Toggle decimal separator in CSV
    if (strSerialData == "separator")
       SDcardController.ToggleDecimalSeparator();
-   // Toggle between modes
+   // Toggle between light modes
    if (strSerialData == "mode")
       LightsController.ToggleStartingSequence();
    // Reruns off
@@ -672,6 +695,16 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LightsController.Main();
+   }
+}
+
+void Core1Blue(void *parameter)
+{
+   BlueNodeHandler.init();
+   for (;;)
+   {
+      BlueNodeHandler.loop();
+      vTaskDelay(5);
    }
 }
 

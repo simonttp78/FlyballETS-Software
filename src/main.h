@@ -30,9 +30,9 @@
 #include "LightsController.h"
 #include "BatterySensor.h"
 #include "SDcardController.h"
-//#include "SystemManager.h"
-//#include "SlaveHandler.h"
-//#include "WifiManager.h"
+#include "SystemManager.h"
+#include "BlueNodeHandler.h"
+#include "WifiManager.h"
 
 // Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #if Simulate
@@ -54,6 +54,7 @@ void ToggleWifi();
 void Core1Race(void *parameter);
 void Core1Lights(void *parameter);
 void Core1LCD(void *parameter);
+void Core1Blue(void *parameter);
 String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
 void WiFiEvent(arduino_event_id_t event);
@@ -135,4 +136,5 @@ bool bSerialStringComplete = false;
 
 TaskHandle_t taskRace;
 TaskHandle_t taskLights;
+TaskHandle_t taskBlue;
 TaskHandle_t taskLCD;

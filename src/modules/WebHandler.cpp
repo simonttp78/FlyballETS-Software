@@ -7,7 +7,7 @@ void WebHandlerClass::init(int webPort)
    // Populate the last modification date based on build datetime
    // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
-
+   _bBlueNodePresent = false;
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -67,7 +67,7 @@ void WebHandlerClass::loop()
    unsigned long lCurrentUpTime = millis();
    if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
       bSendRaceData = true;
-   //log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (bUpdateLights)
@@ -444,7 +444,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
-   //log_d("Getting Lights state");
+   // log_d("Getting Lights state");
    StaticJsonDocument<96> jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 
@@ -886,6 +886,47 @@ void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
+}
+
+bool WebHandlerClass::RedNodeConnected()
+{
+   return _bBlueNodePresent;
+}
+
+void WebHandlerClass::_CheckRedNodeStatus()
+{
+   if (!_RedNodeStatus.Configured)
+   {
+      return;
+   }
+   if (millis() - _RedNodeStatus.LastCheck > 1200)
+   {
+      log_d("Checking Blue ETS, if any...\r\n");
+      _RedNodeStatus.LastCheck = millis();
+      log_d("Blue ETS wsClient->Status: %i\r\n", _RedNodeStatus.client->status());
+      if (_RedNodeStatus.client->status() != WS_CONNECTED)
+      {
+         log_d("ws client status says Red ETS is disconnected (actual status: %i)\r\n", _RedNodeStatus.client->status());
+         _DisconnectRedNode();
+      }
+      else if (millis() - _RedNodeStatus.LastReply > 3600)
+      {
+         log_d("Disconnecting Red ETS due to timeout (last pong: %lu, now: %lu)\r\n", _RedNodeStatus.LastReply, millis());
+         _DisconnectRedNode();
+      }
+      else
+      {
+         log_d("I am pinging the Red ETS at %lu\r\n", millis());
+         _RedNodeStatus.client->ping();
+      }
+   }
+}
+
+void WebHandlerClass::_DisconnectRedNode()
+{
+   _RedNodeStatus.Configured = false;
+   _ws->close(_RedNodeStatus.ClientID);
+   log_i("Red ETS disconnected!");
 }
 
 WebHandlerClass WebHandler;

@@ -112,6 +112,12 @@ void SettingsManagerClass::setDefaultSettings()
       setSetting("CommaInCsv", String("0"));
       saveSettings();
    }
+
+   if (!hasSetting("OperationMode"))
+   {
+      setSetting("OperationMode", String("0"));
+      saveSettings();
+   }
 }
 
 SettingsManagerClass SettingsManager;

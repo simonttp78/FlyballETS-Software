@@ -46,6 +46,8 @@ protected:
    bool _wsAuth(AsyncWebSocketClient *client);
    void _onHome(AsyncWebServerRequest *request);
    void _onFavicon(AsyncWebServerRequest *request);
+   void _CheckRedNodeStatus();
+   void _DisconnectRedNode();
 
    unsigned long _lLastRaceDataBroadcast;
    const uint16_t _iRaceDataBroadcastInterval = 750;
@@ -56,6 +58,18 @@ protected:
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
    char _last_modified[50];
+   bool _bBlueNodePresent;
+
+   typedef struct
+   {
+      bool Configured;
+      IPAddress ip;
+      AsyncWebSocketClient *client;
+      uint8_t ClientID;
+      unsigned long LastCheck;
+      unsigned long LastReply;
+   } stRedNodeStatus;
+   stRedNodeStatus _RedNodeStatus;
 
    typedef struct
    {
@@ -71,6 +85,7 @@ public:
    void init(int webPort);
    void loop();
    void disconnectWsClient(IPAddress ipDisconnectedIP);
+   bool RedNodeConnected();
    bool bUpdateLights = false;
    bool bSendRaceData = false;
    bool bUpdateRaceData = false;
