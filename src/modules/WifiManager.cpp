@@ -14,14 +14,15 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include "WifiManager.h"
-#include <BlueNodeHandler.h>
-#include <SettingsManager.h>
+#include "BlueNodeHandler.h"
+#include "SettingsManager.h"
+#include "LCDController.h"
+#include <ESPmDNS.h>
 #include "enums.h"
-#include "WiFi.h"
 
-void WifiManager::SetupWiFi()
+void WifiManagerClass::SetupWiFi()
 {
-    WiFi.onEvent(std::bind(&WifiManager::WiFiEvent, this, std::placeholders::_1));
+    WiFi.onEvent(std::bind(&WifiManagerClass::WiFiEvent, this, std::placeholders::_1));
     /*WiFi.onEvent(
     [this](WiFiEvent_t event, system_event_info_t info) {
         this->WiFiEvent(event);
@@ -34,6 +35,17 @@ void WifiManager::SetupWiFi()
     log_i("Name: %s, pass: %s\r\n", _strAPName.c_str(), strAPPass.c_str());
     if (iOpMode == SystemModes::RED || iOpMode == SystemModes::SINGLE)
     {
+        /*// Setup AP
+        WiFi.onEvent(WiFiEvent);
+        WiFi.mode(WIFI_AP);
+        String strAPName = SettingsManager.getSetting("APName");
+        String strAPPass = SettingsManager.getSetting("APPass");
+        if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
+            log_e("Error initializing softAP!");
+        else
+            log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
+        WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+        */
         _IPGateway = IPAddress(192, 168, 20, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
         if (!WiFi.mode(WIFI_MODE_AP) ||
@@ -42,6 +54,45 @@ void WifiManager::SetupWiFi()
         {
             log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
         }
+
+        // OTA setup
+        String strAPPass = SettingsManager.getSetting("APPass");
+        ArduinoOTA.setPassword(strAPPass.c_str());
+        ArduinoOTA.setPort(3232);
+        ArduinoOTA.onStart([](){
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+                type = "Firmware";
+            else // U_SPIFFS
+                type = "Filesystem";
+            Serial.println("\n" + type + " update initiated.");
+            LCDController.FirmwareUpdateInit(); });
+        ArduinoOTA.onEnd([](){ 
+            Serial.println("\nUpdate completed.\r\n");
+            LCDController.FirmwareUpdateSuccess(); });
+        ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
+            uint16_t iProgressPercentage = (progress / (total / 100));
+            if (WifiManager.uiLastProgress != iProgressPercentage)
+            {
+                Serial.printf("Progress: %u%%\r", iProgressPercentage);
+                String sProgressPercentage = String(iProgressPercentage);
+                while (sProgressPercentage.length() < 3)
+                    sProgressPercentage = " " + sProgressPercentage;
+                LCDController.FirmwareUpdateProgress(sProgressPercentage);
+                WifiManager.uiLastProgress = iProgressPercentage;
+            } });
+        ArduinoOTA.onError([](ota_error_t error){
+            Serial.printf("Error[%u]: ", error);
+            LCDController.FirmwareUpdateError();
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
+        ArduinoOTA.begin();
+        
+        mdnsServerSetup();
+
     }
     else if (iOpMode == SystemModes::BLUE)
     {
@@ -59,7 +110,7 @@ void WifiManager::SetupWiFi()
         log_e("[WiFi]: Got unknown mode, no idea how I should start...");
 }
 
-void WifiManager::WiFiLoop()
+void WifiManagerClass::WiFiLoop()
 {
     if (millis() - ulLastWifiCheck > WIFI_CHECK_INTERVAL)
     {
@@ -72,7 +123,7 @@ void WifiManager::WiFiLoop()
     }
 }
 
-void WifiManager::WiFiEvent(arduino_event_id_t event)
+void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
 {
     switch (event)
     {
@@ -120,3 +171,64 @@ void WifiManager::WiFiEvent(arduino_event_id_t event)
         break;
     }
 }
+void WifiManagerClass::mdnsServerSetup()
+{
+    MDNS.addService("http", "tcp", 80);
+    MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
+    MDNS.begin("flyballets");
+}
+
+/*void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
+{
+   // Serial.printf("Wifi event %i\r\n", event);
+   switch (event)
+   {
+   case ARDUINO_EVENT_WIFI_AP_START:
+      // log_i("AP Started");
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+      if (WiFi.softAPIP() != IPGateway)
+      {
+         log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         ESP.restart();
+      }
+      log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
+      break;
+
+   case ARDUINO_EVENT_WIFI_AP_STOP:
+      // log_i("AP Stopped");
+      break;
+
+   case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      // log_i("IP assigned to new client");
+      break;
+
+   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+      // bCheckWsClinetStatus = true;
+      // ipTocheck = IPAddress (192,168,20,2);
+      // log_i("IP to check: %s", ipTocheck.toString().c_str());
+      break;
+
+   default:
+      break;
+   }
+}*/
+
+void WifiManagerClass::ToggleWifi()
+{
+   if (WiFi.getMode() == WIFI_MODE_AP)
+   {
+      WiFi.mode(WIFI_OFF);
+      LCDController.UpdateField(LCDController.WifiState, " ");
+      LCDController.bExecuteLCDUpdate = true;
+      log_i("WiFi OFF");
+   }
+   else
+   {
+      WiFi.mode(WIFI_MODE_AP);
+      LCDController.UpdateField(LCDController.WifiState, "W");
+      LCDController.bExecuteLCDUpdate = true;
+      log_i("WiFi ON");
+   }
+}
+
+WifiManagerClass WifiManager;

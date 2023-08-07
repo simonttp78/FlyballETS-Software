@@ -9,14 +9,11 @@
 #ifdef WiFiON
 #include <WiFi.h>
 #include <WiFiMulti.h>
-#include <ESPmDNS.h>
-#include <ArduinoOTA.h>
 #include <WiFiUdp.h>
 #include <WiFiClientSecure.h>
 #endif
 #include <EEPROM.h>
 #include <NeoPixelBus.h>
-#include <ESPmDNS.h>
 //#include <time.h>
 
 // Private libs
@@ -50,7 +47,6 @@ void mdnsServerSetup();
 void serialEvent();
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
-void ToggleWifi();
 void Core1Race(void *parameter);
 void Core1Lights(void *parameter);
 void Core1LCD(void *parameter);
@@ -112,8 +108,6 @@ const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 // Global variables
 bool bCheckWsClinetStatus = false; // flag to check if WS client should be disconnected
 IPAddress ipTocheck;               // IP address of disconnected WiFi user
-
-unsigned int uiLastProgress = 0; // last % OTA progress value
 
 uint16_t iLaserOnTime = 180; // initial value of laser diode on time
 bool bLaserActive = false;   // laser diode state

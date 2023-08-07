@@ -35,8 +35,6 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
-WifiManager wifiManager;
-
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -144,58 +142,10 @@ void setup()
 
 #ifdef WiFiON
    //Init Wifi setup
-   wifiManager.SetupWiFi();
+   WifiManager.SetupWiFi();
    
-   /*// Setup AP
-   WiFi.onEvent(WiFiEvent);
-   WiFi.mode(WIFI_AP);
-   String strAPName = SettingsManager.getSetting("APName");
-   String strAPPass = SettingsManager.getSetting("APPass");
-   if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-      log_e("Error initializing softAP!");
-   else
-      log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-   */
    // configure webserver
    WebHandler.init(80);
-
-   // OTA setup
-   String strAPPass = SettingsManager.getSetting("APPass");
-   ArduinoOTA.setPassword(strAPPass.c_str());
-   ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([](){
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-         type = "Firmware";
-      else // U_SPIFFS
-         type = "Filesystem";
-      Serial.println("\n" + type + " update initiated.");
-      LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([](){ 
-      Serial.println("\nUpdate completed.\r\n");
-      LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
-      uint16_t iProgressPercentage = (progress / (total / 100));
-      if (uiLastProgress != iProgressPercentage)
-      {
-         Serial.printf("Progress: %u%%\r", iProgressPercentage);
-         String sProgressPercentage = String(iProgressPercentage);
-         while (sProgressPercentage.length() < 3)
-            sProgressPercentage = " " + sProgressPercentage;
-         LCDController.FirmwareUpdateProgress(sProgressPercentage);
-         uiLastProgress = iProgressPercentage;
-      } });
-   ArduinoOTA.onError([](ota_error_t error){
-      Serial.printf("Error[%u]: ", error);
-      LCDController.FirmwareUpdateError();
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
-   ArduinoOTA.begin();
-   mdnsServerSetup();
 #endif
    // log_i("Setup running on core %d", xPortGetCoreID());
 
@@ -250,7 +200,7 @@ void loop()
    LCDController.Main();
 
 #ifdef WiFiON
-   wifiManager.WiFiLoop();
+   WifiManager.WiFiLoop();
    // Handle WebSocket server
    WebHandler.loop();
 #endif
@@ -336,68 +286,6 @@ void ResetRace()
    RaceHandler.bExecuteResetRace = true;
    LightsController.bExecuteResetLights = true;
 }
-
-#ifdef WiFiON
-void WiFiEvent(arduino_event_id_t event)
-{
-   // Serial.printf("Wifi event %i\r\n", event);
-   switch (event)
-   {
-   case ARDUINO_EVENT_WIFI_AP_START:
-      // log_i("AP Started");
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-      if (WiFi.softAPIP() != IPGateway)
-      {
-         log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
-         ESP.restart();
-      }
-      log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STOP:
-      // log_i("AP Stopped");
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-      // log_i("IP assigned to new client");
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-      // bCheckWsClinetStatus = true;
-      // ipTocheck = IPAddress (192,168,20,2);
-      // log_i("IP to check: %s", ipTocheck.toString().c_str());
-      break;
-
-   default:
-      break;
-   }
-}
-
-void ToggleWifi()
-{
-   if (WiFi.getMode() == WIFI_MODE_AP)
-   {
-      WiFi.mode(WIFI_OFF);
-      LCDController.UpdateField(LCDController.WifiState, " ");
-      LCDController.bExecuteLCDUpdate = true;
-      log_i("WiFi OFF");
-   }
-   else
-   {
-      WiFi.mode(WIFI_AP);
-      LCDController.UpdateField(LCDController.WifiState, "W");
-      LCDController.bExecuteLCDUpdate = true;
-      log_i("WiFi ON");
-   }
-}
-
-void mdnsServerSetup()
-{
-   MDNS.addService("http", "tcp", 80);
-   MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
-   MDNS.begin("flyballets");
-}
-#endif
 
 void HandleSerialCommands()
 {
@@ -507,7 +395,7 @@ void HandleSerialCommands()
       RaceHandler.ToggleRerunsOffOn(0);
    // Toggle wifi on/off
    if (strSerialData == "wifi")
-      ToggleWifi();
+      WifiManager.ToggleWifi();
    // Toggle wifi on/off
    if (strSerialData == "fwver")
       Serial.printf("Firmware version: %s\r\n", FW_VER);
@@ -621,7 +509,7 @@ void HandleRemoteAndButtons()
             else if (iLastActiveBit == 0) // Mode button - side switch
                RaceHandler.ToggleRunDirection();
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
-               ToggleWifi();
+               WifiManager.ToggleWifi();
          }
       }
    }

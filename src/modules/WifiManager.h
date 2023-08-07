@@ -17,24 +17,29 @@
 #define _WIFIMANAGER_H
 
 #include "Arduino.h"
-#include "WiFi.h"
+#include <ArduinoOTA.h>
+#include <WiFi.h>
 
 #define WIFI_CHECK_INTERVAL 500
 
-class WifiManager
+class WifiManagerClass
 {
 public:
     void SetupWiFi();
     void WiFiLoop();
     void WiFiEvent(arduino_event_id_t event);
+    void ToggleWifi();
 
 private:
+    void mdnsServerSetup();
     IPAddress _IPGateway;
     IPAddress _IPSubnet;
     String _strAPName;
     String _strSTAName;
-
+    uint16_t uiLastProgress = 0; // last % OTA progress value
     unsigned long ulLastWifiCheck = 0;
 };
+
+extern WifiManagerClass WifiManager;
 
 #endif
