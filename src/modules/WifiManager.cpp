@@ -23,29 +23,13 @@
 void WifiManagerClass::SetupWiFi()
 {
     WiFi.onEvent(std::bind(&WifiManagerClass::WiFiEvent, this, std::placeholders::_1));
-    /*WiFi.onEvent(
-    [this](WiFiEvent_t event, system_event_info_t info) {
-        this->WiFiEvent(event);
-    });*/
-    // WiFi.onEvent(WiFiEvent);
     uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
     _strAPName = SettingsManager.getSetting("APName");
     String strAPPass = SettingsManager.getSetting("APPass");
-    log_i("Starting in mode %i", iOpMode);
-    log_i("Name: %s, pass: %s\r\n", _strAPName.c_str(), strAPPass.c_str());
+    log_i("Starting ETS mode %i", iOpMode);
+    log_i("Reference SSID: %s, pass: %s\r\n", _strAPName.c_str(), strAPPass.c_str());
     if (iOpMode == SystemModes::RED || iOpMode == SystemModes::SINGLE)
     {
-        /*// Setup AP
-        WiFi.onEvent(WiFiEvent);
-        WiFi.mode(WIFI_AP);
-        String strAPName = SettingsManager.getSetting("APName");
-        String strAPPass = SettingsManager.getSetting("APPass");
-        if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-            log_e("Error initializing softAP!");
-        else
-            log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-        WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-        */
         _IPGateway = IPAddress(192, 168, 20, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
         if (!WiFi.mode(WIFI_MODE_AP) ||
@@ -97,17 +81,17 @@ void WifiManagerClass::SetupWiFi()
     else if (iOpMode == SystemModes::BLUE)
     {
         _strSTAName = _strAPName;
-        _strAPName += "_SLV";
-        _IPGateway = IPAddress(192, 168, 4, 1);
+        _strAPName += "_BLUE";
+        _IPGateway = IPAddress(192, 168, 21, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
         if (!WiFi.mode(WIFI_MODE_APSTA) || !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
         {
-            log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
+            log_w("Error initializing softAP with name %s!", _strAPName.c_str());
         }
         WiFi.begin(_strSTAName.c_str(), strAPPass.c_str());
     }
     else
-        log_e("[WiFi]: Got unknown mode, no idea how I should start...");
+        log_e("Got unknown mode, no idea how I should start...");
 }
 
 void WifiManagerClass::WiFiLoop()
@@ -116,10 +100,10 @@ void WifiManagerClass::WiFiLoop()
     {
         ulLastWifiCheck = millis();
         log_v("Wifi Status: %u, Wifi.localIP: %S, SoftAPIP: %s, SoftAPStationNum: %i",
-              WiFi.status(),
-              WiFi.localIP().toString().c_str(),
-              WiFi.softAPIP().toString().c_str(),
-              WiFi.softAPgetStationNum());
+        WiFi.status(),
+        WiFi.localIP().toString().c_str(),
+        WiFi.softAPIP().toString().c_str(),
+        WiFi.softAPgetStationNum());
     }
 }
 
@@ -128,14 +112,14 @@ void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
     switch (event)
     {
     case ARDUINO_EVENT_WIFI_AP_START:
-        log_i("Trying to configure IP: %s, SM: %s", _IPGateway.toString().c_str(), _IPSubnet.toString().c_str());
+        log_i("Configuring BLUE ETS AP...");
         if (!WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
         {
-            log_e("[WiFi]: AP Config failed!");
+            log_e("BLUE ETS AP configuration failed!");
         }
         else
         {
-            log_i("[WiFi]: AP Started with name %s, IP: %s", _strAPName.c_str(), WiFi.softAPIP().toString().c_str());
+            log_i("BLUE ETS AP configuration OK, ssid: %s, IP: %s", _strAPName.c_str(), WiFi.softAPIP().toString().c_str());
         }
         if (WiFi.softAPIP() != _IPGateway)
         {
@@ -143,12 +127,23 @@ void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
             ESP.restart();
         }
         break;
+
     case ARDUINO_EVENT_WIFI_AP_STOP:
-        log_i("[WiFi]: AP Stopped");
+        log_i("AP stopped");
+        break;
+
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+        // log_i("IP assigned to new client");
+        break;
+
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+        // bCheckWsClinetStatus = true;
+        // ipTocheck = IPAddress (192,168,20,2);
+        // log_i("IP to check: %s", ipTocheck.toString().c_str());
         break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-        log_i("[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
+        //log_i("STA got IP %s", WiFi.localIP().toString().c_str());
         break;
 
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -163,11 +158,11 @@ void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
     }
 
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-        log_i("Connected to AP %s (event %i)", WiFi.SSID().c_str(), ARDUINO_EVENT_WIFI_STA_CONNECTED);
+        log_i("Connected to RED ETS AP %s", WiFi.SSID().c_str());
         break;
 
     default:
-        log_d("Wifi event %i\r\n", event);
+        //log_d("Wifi event %i", event);
         break;
     }
 }
@@ -178,46 +173,11 @@ void WifiManagerClass::mdnsServerSetup()
     MDNS.begin("flyballets");
 }
 
-/*void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
-{
-   // Serial.printf("Wifi event %i\r\n", event);
-   switch (event)
-   {
-   case ARDUINO_EVENT_WIFI_AP_START:
-      // log_i("AP Started");
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-      if (WiFi.softAPIP() != IPGateway)
-      {
-         log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
-         ESP.restart();
-      }
-      log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STOP:
-      // log_i("AP Stopped");
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-      // log_i("IP assigned to new client");
-      break;
-
-   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-      // bCheckWsClinetStatus = true;
-      // ipTocheck = IPAddress (192,168,20,2);
-      // log_i("IP to check: %s", ipTocheck.toString().c_str());
-      break;
-
-   default:
-      break;
-   }
-}*/
-
 void WifiManagerClass::ToggleWifi()
 {
    if (WiFi.getMode() == WIFI_MODE_AP)
    {
-      WiFi.mode(WIFI_OFF);
+      WiFi.mode(WIFI_MODE_NULL);
       LCDController.UpdateField(LCDController.WifiState, " ");
       LCDController.bExecuteLCDUpdate = true;
       log_i("WiFi OFF");

@@ -200,7 +200,8 @@ void loop()
    LCDController.Main();
 
 #ifdef WiFiON
-   WifiManager.WiFiLoop();
+   if (CORE_DEBUG_LEVEL > 4)
+      WifiManager.WiFiLoop();
    // Handle WebSocket server
    WebHandler.loop();
 #endif

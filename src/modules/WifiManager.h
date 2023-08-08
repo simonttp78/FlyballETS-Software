@@ -20,7 +20,7 @@
 #include <ArduinoOTA.h>
 #include <WiFi.h>
 
-#define WIFI_CHECK_INTERVAL 500
+#define WIFI_CHECK_INTERVAL 5000
 
 class WifiManagerClass
 {
@@ -29,6 +29,10 @@ public:
     void WiFiLoop();
     void WiFiEvent(arduino_event_id_t event);
     void ToggleWifi();
+    
+    // Global variables
+    bool bCheckWsClinetStatus = false; // flag to check if WS client should be disconnected
+    IPAddress ipTocheck;               // IP address of disconnected WiFi user
 
 private:
     void mdnsServerSetup();

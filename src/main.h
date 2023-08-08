@@ -105,10 +105,6 @@ const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 // 1: free/TX
 // 3: free/RX
 
-// Global variables
-bool bCheckWsClinetStatus = false; // flag to check if WS client should be disconnected
-IPAddress ipTocheck;               // IP address of disconnected WiFi user
-
 uint16_t iLaserOnTime = 180; // initial value of laser diode on time
 bool bLaserActive = false;   // laser diode state
 
