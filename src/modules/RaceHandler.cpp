@@ -757,6 +757,9 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    case RaceHandlerClass::STOPPED:
       strRaceState = " STOP  ";
       break;
+   case RaceHandlerClass::SCHEDULED:
+      strRaceState = " SCHED ";
+      break;
    default:
       break;
    }
@@ -816,6 +819,32 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
          log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, iDogRunCounters[iPreviousDog]), GetCrossingTime(iPreviousDog, iDogRunCounters[iPreviousDog]).c_str());
          log_d("Running dog: %i.", iCurrentDog + 1);
       }
+   }
+}
+
+/// <summary>
+///   Sets the status of the race to STARTING, should be called at same time when start light
+///   sequence is called.
+/// </summary>
+/// <param name="StartTime">   The time in milliseconds at which the race should start. </param>
+void RaceHandlerClass::StartRace(unsigned long StartTime)
+{
+   _llSchduledRaceStartTime = StartTime;
+   ESP_LOGI(__FILE__, "Race scheduled to start at %lu ms", StartTime);
+   LightsController.ShowScheduledRace(StartTime - millis());
+   RaceState = RaceStates::SCHEDULED;
+}
+
+/// <summary>
+///   Handles scheduled race start (if any) and makes sure race is started at scheduled time.
+///   Should be called in main loop
+/// </summary>
+void RaceHandlerClass::_HandleScheduledRace()
+{
+   if (RaceState == RaceStates::SCHEDULED && millis() >= _llSchduledRaceStartTime)
+   {
+      this->StartRaceTimer();
+      _llSchduledRaceStartTime = 0;
    }
 }
 

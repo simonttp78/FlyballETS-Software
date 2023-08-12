@@ -112,14 +112,14 @@ void WifiManagerClass::WiFiEvent(arduino_event_id_t event)
     switch (event)
     {
     case ARDUINO_EVENT_WIFI_AP_START:
-        log_i("Configuring BLUE ETS AP...");
+        log_i("Configuring AP...");
         if (!WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
         {
-            log_e("BLUE ETS AP configuration failed!");
+            log_e("AP configuration failed!");
         }
         else
         {
-            log_i("BLUE ETS AP configuration OK, ssid: %s, IP: %s", _strAPName.c_str(), WiFi.softAPIP().toString().c_str());
+            log_i("AP configuration OK, ssid: %s, IP: %s", _strAPName.c_str(), WiFi.softAPIP().toString().c_str());
         }
         if (WiFi.softAPIP() != _IPGateway)
         {

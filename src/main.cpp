@@ -131,14 +131,14 @@ void setup()
       1);
 
    // Initialize BlueNodeHandler class
-   /*xTaskCreatePinnedToCore(
+   xTaskCreatePinnedToCore(
       Core1Blue,
       "Blue",
       16384,
       NULL,
       1,
       &taskBlue,
-      1);*/
+      1);
 
 #ifdef WiFiON
    //Init Wifi setup

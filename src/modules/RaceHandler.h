@@ -22,7 +22,8 @@ public:
       RESET,
       STARTING,
       RUNNING,
-      STOPPED
+      STOPPED,
+      SCHEDULED
    };
    RaceStates RaceState = RESET;
    String strRaceState;
@@ -44,6 +45,7 @@ public:
 
    void Main();
    void StartRaceTimer();
+   void StartRace(unsigned long StartTime);
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
@@ -73,6 +75,7 @@ public:
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 private:
+   long long _llSchduledRaceStartTime;
    long long _llRaceTime;
    long long _llRaceEndTime;
    long long _llLastDogExitTime;
@@ -151,6 +154,7 @@ private:
    void _PrintRaceSummary();
    void _PrintRaceTriggerRecords();
    void _PrintRaceTriggerRecordsToFile();
+   void _HandleScheduledRace();
 };
 
 extern RaceHandlerClass RaceHandler;

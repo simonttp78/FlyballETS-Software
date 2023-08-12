@@ -101,4 +101,13 @@ void GPSHandlerClass::_FormatTime()
    sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", tm.Year + 1970, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
 }
 
+long GPSHandlerClass::GetMillisToEpochSecond(unsigned long lEpochSecond)
+{
+   long lDiff = (lEpochSecond - now()) * 1000;
+   lDiff -= (_Tgps.time.centisecond() * 10);
+   lDiff -= _Tgps.time.age();
+
+   return lDiff;
+}
+
 GPSHandlerClass GPSHandler;

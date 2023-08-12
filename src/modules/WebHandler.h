@@ -18,6 +18,7 @@
 #include "BatterySensor.h"
 #include <AsyncTCP.h>
 #include "GPSHandler.h"
+#include "BlueNodeHandler.h"
 #include <rom/rtc.h>
 #ifndef WebUIonSDcard
 #include "index.html.gz.h"

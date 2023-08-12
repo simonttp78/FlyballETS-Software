@@ -432,6 +432,51 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          RaceHandler.ToggleRerunsOffOn(0);
       return true;
    }
+   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   {
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         // ReturnError = "Race was already stopped!";
+         bUpdateTimerWebUIdata = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
+         return false;
+      }
+      else
+      {
+         LightsController.DeleteSchedules();
+         RaceHandler.bExecuteStopRace = true;
+         RaceHandler.bExecuteResetRace = true;
+         LightsController.bExecuteResetLights = true;
+         return true;
+      }
+
+
+      String StartTime = ActionObj["actionData"]["startTime"];
+
+      unsigned long lStartEpochTime = StartTime.toInt();
+      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
+      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
+
+      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
+
+      if (lMillisToStart < 0)
+      {
+         //ReturnError = "Requested starttime is in the past!";
+         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
+         return false;
+      }
+
+      RaceHandler.StartRace(lMillisToStart + millis());
+      return true;
+   }
+   else if (ActionType == "AnnounceBlue")
+   {
+      log_i("We have an ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
+      BlueNodeHandler.configureBlueNode(Client->remoteIP());
+      _bBlueNodePresent = true;
+      return true;
+   }
    else
    {
       // ReturnError = "Unknown action received!";

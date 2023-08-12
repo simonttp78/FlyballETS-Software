@@ -78,6 +78,7 @@ public:
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    void ReaceReadyFault(LightStates byLightState);
    void ToggleStartingSequence();
+   void ShowScheduledRace(unsigned long Duration);
 
    stLightsState GetLightsState();
 
