@@ -923,6 +923,7 @@ void RaceHandlerClass::ResetRace()
       llRaceStartTime = MICROS;
       _llRaceEndTime = MICROS;
       _llGatesClearedTime = MICROS;
+      _llSchduledRaceStartTime = 0;
       _llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
@@ -1121,7 +1122,7 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    // Don't process any faults when race is not running
-   if (RaceState == STOPPED || RaceState == RESET)
+   if (RaceState == STOPPED || RaceState == RESET || RaceState == SCHEDULED)
       return;
    bool bFault;
    // Check if we have to toggle. Assumed only manual faults use TOGGLE option
@@ -1188,7 +1189,7 @@ void RaceHandlerClass::TriggerSensor1()
 {
    if (bIgnoreSensors)
       return;
-   else if (RaceState == RESET)
+   else if (RaceState == RESET || RaceState == SCHEDULED)
    {
       if (digitalRead(_iS1Pin) == 1)
          LightsController.bExecuteRaceReadyFaultON = true;
@@ -1207,7 +1208,7 @@ void RaceHandlerClass::TriggerSensor2()
 {
    if (bIgnoreSensors)
       return;
-   else if (RaceState == RESET)
+   else if (RaceState == RESET || RaceState == SCHEDULED)
    {
       if (digitalRead(_iS2Pin) == 1)
          LightsController.bExecuteRaceReadyFaultON = true;

@@ -55,9 +55,7 @@ void WebHandlerClass::init(int webPort)
    _iPwrOnTag = SDcardController.iTagValue;
 
    for (bool &bIsConsumer : _bIsConsumerArray)
-   {
       bIsConsumer = false;
-   }
 
    _iNumOfConsumers = 0;
 }
@@ -88,6 +86,7 @@ void WebHandlerClass::loop()
          }
       }
    }
+   _CheckRedNodeStatus();
 }
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -96,6 +95,17 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
    if (type == WS_EVT_CONNECT)
    {
+      if (client->remoteIP().toString().equals("192.168.20.1"))
+      {
+         //This client is the master!
+         _RedNodeStatus.client = _ws->client(client->id());
+         _RedNodeStatus.ClientID = client->id();
+         _RedNodeStatus.ip = client->remoteIP();
+         _RedNodeStatus.Configured = true;
+         _RedNodeStatus.LastReply = millis();
+         //_RedNodeStatus.LastCheck = millis();
+      }
+      
       log_i("Client %i connected to %s!", client->id(), server->url());
 
       // Access via /wsa. Checking if clinet/consumer has already athenticated
@@ -112,6 +122,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_DISCONNECT)
    {
+      if (client->id() == _RedNodeStatus.ClientID)
+      {
+         log_i("Disconnecting master due to disconnect event from ws\r\n");
+         _DisconnectRedNode();
+      }
+      
       if (_bIsConsumerArray[client->id()])
       {
          _iNumOfConsumers--;
@@ -126,6 +142,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_PONG)
    {
+      if (client->id() == _RedNodeStatus.ClientID)
+      {
+         _RedNodeStatus.LastReply = millis();
+         log_d("Pong received from master (%lu)!\r\n", millis());
+      }
       log_d("ws[%s][%u] pong[%u]: %s", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
@@ -294,10 +315,39 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       }
       else
       {
-         if (LightsController.bModeNAFA)
-            LightsController.WarningStartSequence();
+         if (_bBlueNodePresent)
+         {
+            unsigned long ulStartTime = GPSHandler.GetEpochTime() + 2;
+
+            StaticJsonDocument<bsActionScheduleStartRace> jsonDoc;
+
+            JsonObject root = jsonDoc.to<JsonObject>();
+
+            JsonObject action = root.createNestedObject("action");
+            action["actionType"] = "ScheduleStartRace";
+            JsonObject action_actionData = action.createNestedObject("actionData");
+            action_actionData["startTime"] = ulStartTime;
+
+            String strScheduleStartMessage;
+            serializeJson(root, strScheduleStartMessage);
+            BlueNodeHandler.sendToBlueNode(strScheduleStartMessage);
+
+            long lMillisToStart = GPSHandler.GetMillisToEpochSecond(ulStartTime);
+            if (lMillisToStart < 0)
+               return false;
+            
+            if (LightsController.bModeNAFA)
+               LightsController.WarningStartSequence(lMillisToStart + millis());
+            else
+               LightsController.InitiateStartSequence(lMillisToStart + millis());
+         }
          else
-            LightsController.InitiateStartSequence();
+         {
+            if (LightsController.bModeNAFA)
+               LightsController.WarningStartSequence();
+            else
+               LightsController.InitiateStartSequence();
+         }
          return true;
       }
    }
@@ -315,6 +365,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          LightsController.DeleteSchedules();
          RaceHandler.bExecuteStopRace = true;
+         if (_bBlueNodePresent)
+            BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"StopRace\"}}");
          return true;
       }
    }
@@ -332,6 +384,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          RaceHandler.bExecuteResetRace = true;
          LightsController.bExecuteResetLights = true;
+         if (_bBlueNodePresent)
+            BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"ResetRace\"}}");
          return true;
       }
    }
@@ -348,13 +402,50 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       RaceHandler.SetDogFault(iDogNum);
       return true;
    }
+   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   {
+      //Check if race is in reset state. Instead of returning error if it isn't, we just stop and reset it.
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         LightsController.DeleteSchedules();
+         RaceHandler.bExecuteStopRace = true;
+         RaceHandler.bExecuteResetRace = true;
+         LightsController.bExecuteResetLights = true;
+      }
+
+      String StartTime = ActionObj["actionData"]["startTime"];
+
+      unsigned long lStartEpochTime = StartTime.toInt();
+      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
+      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
+
+      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
+
+      if (lMillisToStart < 0)
+      {
+         //ReturnError = "Requested starttime is in the past!";
+         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
+         return false;
+      }
+
+      if (LightsController.bModeNAFA)
+         LightsController.WarningStartSequence(lMillisToStart + millis());
+      else
+         LightsController.InitiateStartSequence(lMillisToStart + millis());
+      return true;
+   }
+   else if (ActionType == "AnnounceSlave")
+   {
+      log_i("We have a slave with IP %s", Client->remoteIP().toString().c_str());
+      BlueNodeHandler.configureBlueNode(Client->remoteIP());
+      _bBlueNodePresent = true;
+      return true;
+   }
    else if (ActionType == "AnnounceConsumer")
    {
       log_d("We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
-      {
          _iNumOfConsumers++;
-      }
       _bIsConsumerArray[Client->id()] = true;
       bUpdateRaceData = true;
       bSendRaceData = true;
@@ -432,51 +523,6 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          RaceHandler.ToggleRerunsOffOn(0);
       return true;
    }
-   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
-   {
-      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-      {
-         // ReturnError = "Race was already stopped!";
-         bUpdateTimerWebUIdata = true;
-         bSendRaceData = true;
-         bUpdateLights = true;
-         return false;
-      }
-      else
-      {
-         LightsController.DeleteSchedules();
-         RaceHandler.bExecuteStopRace = true;
-         RaceHandler.bExecuteResetRace = true;
-         LightsController.bExecuteResetLights = true;
-         return true;
-      }
-
-
-      String StartTime = ActionObj["actionData"]["startTime"];
-
-      unsigned long lStartEpochTime = StartTime.toInt();
-      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
-      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
-
-      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
-
-      if (lMillisToStart < 0)
-      {
-         //ReturnError = "Requested starttime is in the past!";
-         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
-         return false;
-      }
-
-      RaceHandler.StartRace(lMillisToStart + millis());
-      return true;
-   }
-   else if (ActionType == "AnnounceBlue")
-   {
-      log_i("We have an ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
-      BlueNodeHandler.configureBlueNode(Client->remoteIP());
-      _bBlueNodePresent = true;
-      return true;
-   }
    else
    {
       // ReturnError = "Unknown action received!";
@@ -505,28 +551,13 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       if (iClientId == -1)
       {
          _ws->textAll(wsBuffer);
-         /*uint8_t iId = 0;
-         for (auto &isConsumer : _bIsConsumerArray)
+         for (uint8_t i = 0; i < _ws->count(); i++)
          {
-            if (isConsumer)
+            if (_bIsConsumerArray[i])
             {
-               // log_d("Getting client obj for id %i", iId);
-               AsyncWebSocketClient *client = _ws->client(iId);
-               if (client->queueIsFull())
-               {
-                  log_d("Deactivating consumer %i", iId);
-                  _ws->close(iId);
-                  _iNumOfConsumers--;
-                  _bIsConsumerArray[client->id()] = false;
-               }
-               else if (client && client->status() == WS_CONNECTED)
-               {
-                  // log_d("Generic Race Data update. Sending to client %i", iId);
-                  client->text(wsBuffer);
-               }
+               _ws->text(i, (char *)wsBuffer);
             }
-            iId++;
-         }*/
+         }
       }
       else
       {
@@ -541,120 +572,160 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 {
    if (_iNumOfConsumers == 0)
-   {
       return;
+
+   StaticJsonDocument<bsRaceDataArray> JsonRaceDataDoc;
+   JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
+   JsonArray JsonRaceData = JsonRoot.createNestedArray("RaceData");
+
+   StaticJsonDocument<bsRaceData> JsonRedNodeRaceDataDoc;
+   JsonObject JsonRedNodeRaceData = JsonRedNodeRaceDataDoc.to<JsonObject>();
+
+   StaticJsonDocument<bsRaceData> JsonBlueNodeRaceDataDoc;
+   JsonObject JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.to<JsonObject>();
+
+   if (bUpdateRaceData)
+   {
+      JsonRedNodeRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
+      JsonRedNodeRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
+   }
+   if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+   {
+      JsonRedNodeRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
+      bUpdateThisRaceDataField[elapsedTime] = false;
+   }
+   if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+   {
+      JsonRedNodeRaceData["cleanTime"] = RaceHandler.GetCleanTime();
+      bUpdateThisRaceDataField[cleanTime] = false;
+   }
+   if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
+   {
+      JsonRedNodeRaceData["raceState"] = RaceHandler.RaceState;
+      bUpdateThisRaceDataField[raceState] = false;
+   }
+   if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
+   {
+      JsonRedNodeRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
+      bUpdateThisRaceDataField[rerunsOff] = false;
+   }
+
+   JsonArray JsonDogDataArray = JsonRedNodeRaceData.createNestedArray("dogData");
+   // Update dogs times, crossing/entry times and re-run info
+   for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+   {
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNr"] = i;
+      if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
+         bUpdateThisRaceDataField[i + 4] = false;
+      }
+      if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         if (i == RaceHandler.iCurrentDog)
+            JsonDogData["running"] = true;
+         else
+            JsonDogData["running"] = false;
+         bUpdateThisRaceDataField[i + 8] = false;
+      }
+      if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         char cForJson[9];
+         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+         {
+            JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+            RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
+            DogTiming["time"] = cForJson;
+            RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
+            DogTiming["crossing"] = cForJson;
+         }
+         bUpdateThisRaceDataField[i] = false;
+      }
+   }
+   JsonRaceData.add(JsonRedNodeRaceData);
+   log_d("[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
+
+   if (_bBlueNodePresent)
+   {
+      log_d("[WEBHANDLER]: Requesting blue ETS racedata...\r\n");
+   #define USE_STRING
+
+   #ifdef USE_STRING
+      String strJsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData();
+      log_d("Blue ETS racedata: %s\r\n", strJsonBlueNodeRaceData.c_str());
+      DeserializationError error = deserializeJson(JsonBlueNodeRaceDataDoc, strJsonBlueNodeRaceData);
+      //char * strJsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData2();
+      //log_d("Blue node racedata: %s, length: %i\r\n", strJsonBlueNodeRaceData, strlen(strJsonBlueNodeRaceData));
+      //DeserializationError error = deserializeJson(jsonBlueNodeRaceDataDoc, strJsonBlueNodeRaceData, strlen(strJsonBlueNodeRaceData));
+      if (error)
+         log_e("Error parsing json data from Blue ETS: %s\r\n", error.c_str());
+      JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.as<JsonObject>();
+   #else
+      JsonObject JsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData1();
+
+   #endif // USE_STRING
+
+      String strJsonRaceDataTest;
+      serializeJson(JsonBlueNodeRaceData, strJsonRaceDataTest);
+      log_d("Got json Blue ETS racedata: %s, length: %i\r\n", strJsonRaceDataTest.c_str(), measureJson(JsonBlueNodeRaceData));
+
+      if (measureJson(JsonBlueNodeRaceData) > 2)
+         JsonRaceData.add(JsonBlueNodeRaceData);
+      else
+         log_i("Got invalid Blue ETS racedata (length: %i)", measureJson(JsonBlueNodeRaceData));
+   }
+      
+   bUpdateTimerWebUIdata = false;
+   bUpdateRaceData = false;
+
+   String strJsonRaceData;
+   serializeJson(JsonRaceDataDoc, strJsonRaceData);
+   log_d("Sending back RD array: %s\r\n", strJsonRaceData.c_str());
+   if (iClientId == -1)
+   {
+      uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray)
+      {
+         if (isConsumer)
+         {
+            log_d("Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               log_d("Sending to client %i\r\n", iId);
+               client->text(strJsonRaceData);
+            }
+         }
+         iId++;
+      }
    }
    else
    {
-      StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
-      JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
-      JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
-
-      if (bUpdateRaceData)
-      {
-         JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
-         JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
-      }
-      if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
-      {
-         JsonRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
-         bUpdateThisRaceDataField[elapsedTime] = false;
-      }
-      if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
-      {
-         JsonRaceData["cleanTime"] = RaceHandler.GetCleanTime();
-         bUpdateThisRaceDataField[cleanTime] = false;
-      }
-      if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
-      {
-         JsonRaceData["raceState"] = RaceHandler.RaceState;
-         bUpdateThisRaceDataField[raceState] = false;
-      }
-      if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
-      {
-         JsonRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
-         bUpdateThisRaceDataField[rerunsOff] = false;
-      }
-
-      JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      // Update dogs times, crossing/entry times and re-run info
-      for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
-      {
-         JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNr"] = i;
-         if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
-            bUpdateThisRaceDataField[i + 4] = false;
-         }
-         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            if (i == RaceHandler.iCurrentDog)
-               JsonDogData["running"] = true;
-            else
-               JsonDogData["running"] = false;
-            bUpdateThisRaceDataField[i + 8] = false;
-         }
-         if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-            char cForJson[9];
-            for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
-            {
-               JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-               RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
-               DogTiming["time"] = cForJson;
-               RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
-               DogTiming["crossing"] = cForJson;
-            }
-            bUpdateThisRaceDataField[i] = false;
-         }
-      }
-      bUpdateTimerWebUIdata = false;
-      bUpdateRaceData = false;
-
-      size_t len = measureJson(JsonRaceDataDoc);
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
-      {
-         serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
-         // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
-         if (iClientId == -1)
-         {
-            _ws->textAll(wsBuffer);
-            /*uint8_t iId = 0;
-            for (auto &isConsumer : _bIsConsumerArray)
-            {
-               if (isConsumer)
-               {
-                  // log_d("Getting client obj for id %i", iId);
-                  AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client->queueIsFull())
-                  {
-                     log_d("Deactivating consumer %i", iId);
-                     _ws->close(iId);
-                     _iNumOfConsumers--;
-                     _bIsConsumerArray[client->id()] = false;
-                  }
-                  else if (client && client->status() == WS_CONNECTED)
-                  {
-                     // log_d("Generic Race Data update. Sending to client %i", iId);
-                     client->text(wsBuffer);
-                  }
-               }
-               iId++;
-            }*/
-         }
-         else
-         {
-            // log_d("Specific update. Sending to client %i", iClientId);
-            AsyncWebSocketClient *client = _ws->client(iClientId);
-            client->text(wsBuffer);
-         }
-         _lLastRaceDataBroadcast = _lLastBroadcast = millis();
-         bSendRaceData = false;
-      }
+      log_d("Sending to client %i\r\n", iClientId);
+      _ws->text(iClientId, strJsonRaceData);
    }
+   _lLastRaceDataBroadcast = _lLastBroadcast = millis();
+   bSendRaceData = false;
+
+   /*size_t len = measureJson(JsonRaceDataDoc);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
+      // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
+      if (iClientId == -1)
+         _ws->textAll(wsBuffer);
+      else
+      {
+         // log_d("Specific update. Sending to client %i", iClientId);
+         AsyncWebSocketClient *client = _ws->client(iClientId);
+         client->text(wsBuffer);
+      }
+      _lLastRaceDataBroadcast = _lLastBroadcast = millis();
+      bSendRaceData = false;
+   }*/
 }
 
 bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
@@ -754,47 +825,37 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       JsonSystemData["bat"] = BatterySensor.GetBatteryPercentage();
       JsonSystemData["dir"] = _strRunDirection;
 
-      size_t len = measureJson(JsonSystemDataDoc);
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
+      String strJsonSystemData;
+      serializeJson(JsonSystemDataDoc, strJsonSystemData);
+
+      if (iClientId == -1)
       {
-         serializeJson(JsonSystemDataDoc, (char *)wsBuffer->get(), len + 1);
-         if (iClientId == -1)
+         //_ws->textAll(wsBuffer);
+         uint8_t iId = 0;
+         for (auto &isConsumer : _bIsConsumerArray)
          {
-            _ws->textAll(wsBuffer);
-            /*uint8_t iId = 0;
-            for (auto &isConsumer : _bIsConsumerArray)
+            if (isConsumer)
             {
-               if (isConsumer)
+               // log_d("Getting client obj for id %i", iId);
+               AsyncWebSocketClient *client = _ws->client(iId);
+               if (client && client->status() == WS_CONNECTED)
                {
-                  // log_d("Getting client obj for id %i", iId);
-                  AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client->queueIsFull())
-                  {
-                     log_d("Deactivating consumer %i", iId);
-                     _ws->close(iId);
-                     _iNumOfConsumers--;
-                     _bIsConsumerArray[client->id()] = false;
-                  }
-                  else if (client && client->status() == WS_CONNECTED)
-                  {
-                     // log_d("Generic System Data update. Sending to client %i", iId);
-                     client->text(wsBuffer);
-                  }
+                  log_d("Sending to client %i\r\n", iId);
+                  client->text(strJsonSystemData);
                }
-               iId++;
-            }*/
+            }
+            iId++;
          }
-         else
-         {
-            // log_d("Specific update. Sending to client %i", iClientId);
-            AsyncWebSocketClient *client = _ws->client(iClientId);
-            client->text(wsBuffer);
-         }
-         _lLastSystemDataBroadcast = _lLastBroadcast = millis();
-         // log_d("Sent sysdata at %lu", millis());
       }
+      else
+      {
+         // log_d("Specific update. Sending to client %i", iClientId);
+         _ws->text(iClientId, strJsonSystemData);
+      }
+      _lLastSystemDataBroadcast = _lLastBroadcast = millis();
+      // log_d("Sent sysdata at %lu", millis());
    }
+   log_d("Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
@@ -856,7 +917,7 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
    bool bAuthResult = request->authenticate("Admin", httpPassword);
    if (!bAuthResult)
    {
-      log_e("[WEBHANDLER] Admin user failed to login!");
+      log_e("Admin user failed to login!");
    }
    return bAuthResult;
 }

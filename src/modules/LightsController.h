@@ -70,8 +70,8 @@ public:
    LightStates CheckLightState(Lights byLight);
    void Main();
    void HandleStartSequence();
-   void InitiateStartSequence();
-   void WarningStartSequence();
+   void InitiateStartSequence(uint16_t iOffset = 10);
+   void WarningStartSequence(uint16_t iOffset = 10);
    void ToggleLightState(Lights byLight, LightStates byLightState = TOGGLE);
    void ResetLights();
    void DeleteSchedules();
