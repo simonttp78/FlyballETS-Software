@@ -278,13 +278,14 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       size_t len = measureJson(jsonResponseDoc);
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+      std::shared_ptr<std::vector<uint8_t>> buffer;
+      buffer = std::make_shared<std::vector<uint8_t>>(len);
       _lLastBroadcast = millis();
-      if (wsBuffer)
+      if (std::move(buffer))
       {
-         serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
+         serializeJson(jsonResponseDoc, (char *)buffer->data(),len);
          // log_d("wsBuffer to send: %s", (char *)wsBuffer->get());
-         client->text(wsBuffer);
+         client->text(std::move(buffer));
       }
    }
 }
@@ -543,14 +544,17 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    copyArray(LightStates.State, JsonLightsData);
 
    size_t len = measureJson(jsonLightsDoc);
-   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-   if (wsBuffer)
+   std::shared_ptr<std::vector<uint8_t>> buffer;
+   buffer = std::make_shared<std::vector<uint8_t>>(len);
+   
+   if (std::move(buffer))
    {
-      serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
+      serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
+      //serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
       // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       if (iClientId == -1)
       {
-         _ws->textAll(wsBuffer);
+         _ws->textAll(std::move(buffer));
          for (uint8_t i = 0; i < _ws->count(); i++)
          {
             if (_bIsConsumerArray[i])
@@ -563,7 +567,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       {
          // log_d("Specific update. Sending to client %i", iClientId);
          AsyncWebSocketClient *client = _ws->client(iClientId);
-         client->text(wsBuffer);
+         client->text(std::move(buffer));
       }
       _lLastBroadcast = millis();
    }
