@@ -559,7 +559,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
          {
             if (_bIsConsumerArray[i])
             {
-               _ws->text(i, (char *)wsBuffer);
+               _ws->text(i, (char *)buffer->data());
             }
          }
       }
