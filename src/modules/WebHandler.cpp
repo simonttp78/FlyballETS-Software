@@ -532,6 +532,9 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
 
 void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
+   if (_iNumOfConsumers == 0)
+      return;
+   
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    // log_d("Getting Lights state");
@@ -572,119 +575,115 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 {
    if (_iNumOfConsumers == 0)
-   {
       return;
-   }
-   else
+
+   StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
+   JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
+   JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
+
+   if (bUpdateRaceData)
    {
-      StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
-      JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
-      JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
+      JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
+   }
+   if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+   {
+      JsonRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
+      bUpdateThisRaceDataField[elapsedTime] = false;
+   }
+   if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+   {
+      JsonRaceData["cleanTime"] = RaceHandler.GetCleanTime();
+      bUpdateThisRaceDataField[cleanTime] = false;
+   }
+   if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
+   {
+      JsonRaceData["raceState"] = RaceHandler.RaceState;
+      bUpdateThisRaceDataField[raceState] = false;
+   }
+   if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
+   {
+      JsonRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
+      bUpdateThisRaceDataField[rerunsOff] = false;
+   }
 
-      if (bUpdateRaceData)
+   JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+   // Update dogs times, crossing/entry times and re-run info
+   for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+   {
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNr"] = i;
+      if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
       {
-         JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
-         JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
+         JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
+         bUpdateThisRaceDataField[i + 4] = false;
       }
-      if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
       {
-         JsonRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
-         bUpdateThisRaceDataField[elapsedTime] = false;
-      }
-      if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
-      {
-         JsonRaceData["cleanTime"] = RaceHandler.GetCleanTime();
-         bUpdateThisRaceDataField[cleanTime] = false;
-      }
-      if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
-      {
-         JsonRaceData["raceState"] = RaceHandler.RaceState;
-         bUpdateThisRaceDataField[raceState] = false;
-      }
-      if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
-      {
-         JsonRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
-         bUpdateThisRaceDataField[rerunsOff] = false;
-      }
-
-      JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      // Update dogs times, crossing/entry times and re-run info
-      for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
-      {
-         JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNr"] = i;
-         if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
-            bUpdateThisRaceDataField[i + 4] = false;
-         }
-         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            if (i == RaceHandler.iCurrentDog)
-               JsonDogData["running"] = true;
-            else
-               JsonDogData["running"] = false;
-            bUpdateThisRaceDataField[i + 8] = false;
-         }
-         if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
-         {
-            JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-            char cForJson[9];
-            for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
-            {
-               JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-               RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
-               DogTiming["time"] = cForJson;
-               RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
-               DogTiming["crossing"] = cForJson;
-            }
-            bUpdateThisRaceDataField[i] = false;
-         }
-      }
-      bUpdateTimerWebUIdata = false;
-      bUpdateRaceData = false;
-
-      size_t len = measureJson(JsonRaceDataDoc);
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
-      {
-         serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
-         // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
-         if (iClientId == -1)
-         {
-            _ws->textAll(wsBuffer);
-            /*uint8_t iId = 0;
-            for (auto &isConsumer : _bIsConsumerArray)
-            {
-               if (isConsumer)
-               {
-                  // log_d("Getting client obj for id %i", iId);
-                  AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client->queueIsFull())
-                  {
-                     log_d("Deactivating consumer %i", iId);
-                     _ws->close(iId);
-                     _iNumOfConsumers--;
-                     _bIsConsumerArray[client->id()] = false;
-                  }
-                  else if (client && client->status() == WS_CONNECTED)
-                  {
-                     // log_d("Generic Race Data update. Sending to client %i", iId);
-                     client->text(wsBuffer);
-                  }
-               }
-               iId++;
-            }*/
-         }
+         if (i == RaceHandler.iCurrentDog)
+            JsonDogData["running"] = true;
          else
-         {
-            // log_d("Specific update. Sending to client %i", iClientId);
-            AsyncWebSocketClient *client = _ws->client(iClientId);
-            client->text(wsBuffer);
-         }
-         _lLastRaceDataBroadcast = _lLastBroadcast = millis();
-         bSendRaceData = false;
+            JsonDogData["running"] = false;
+         bUpdateThisRaceDataField[i + 8] = false;
       }
+      if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         char cForJson[9];
+         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+         {
+            JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+            RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
+            DogTiming["time"] = cForJson;
+            RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
+            DogTiming["crossing"] = cForJson;
+         }
+         bUpdateThisRaceDataField[i] = false;
+      }
+   }
+   bUpdateTimerWebUIdata = false;
+   bUpdateRaceData = false;
+
+   size_t len = measureJson(JsonRaceDataDoc);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
+      // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
+      if (iClientId == -1)
+      {
+         _ws->textAll(wsBuffer);
+         /*uint8_t iId = 0;
+         for (auto &isConsumer : _bIsConsumerArray)
+         {
+            if (isConsumer)
+            {
+               // log_d("Getting client obj for id %i", iId);
+               AsyncWebSocketClient *client = _ws->client(iId);
+               if (client->queueIsFull())
+               {
+                  log_d("Deactivating consumer %i", iId);
+                  _ws->close(iId);
+                  _iNumOfConsumers--;
+                  _bIsConsumerArray[client->id()] = false;
+               }
+               else if (client && client->status() == WS_CONNECTED)
+               {
+                  // log_d("Generic Race Data update. Sending to client %i", iId);
+                  client->text(wsBuffer);
+               }
+            }
+            iId++;
+         }*/
+      }
+      else
+      {
+         // log_d("Specific update. Sending to client %i", iClientId);
+         AsyncWebSocketClient *client = _ws->client(iClientId);
+         client->text(wsBuffer);
+      }
+      _lLastRaceDataBroadcast = _lLastBroadcast = millis();
+      bSendRaceData = false;
    }
 }
 

@@ -33,8 +33,8 @@ void WifiManagerClass::SetupWiFi()
         _IPGateway = IPAddress(192, 168, 20, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
         if (!WiFi.mode(WIFI_MODE_AP) ||
-            !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet) ||
-            !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
+            !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()) ||
+            !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
         {
             log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
         }
