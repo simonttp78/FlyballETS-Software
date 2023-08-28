@@ -55,9 +55,7 @@ void WebHandlerClass::init(int webPort)
    _iPwrOnTag = SDcardController.iTagValue;
 
    for (bool &bIsConsumer : _bIsConsumerArray)
-   {
       bIsConsumer = false;
-   }
 
    _iNumOfConsumers = 0;
 }
@@ -96,6 +94,17 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
    if (type == WS_EVT_CONNECT)
    {
+      if (client->remoteIP().toString().equals("192.168.20.1"))
+      {
+         //This client is the master!
+         _RedNodeStatus.client = _ws->client(client->id());
+         _RedNodeStatus.ClientID = client->id();
+         _RedNodeStatus.ip = client->remoteIP();
+         _RedNodeStatus.Configured = true;
+         _RedNodeStatus.LastReply = millis();
+         //_RedNodeStatus.LastCheck = millis();
+      }
+
       log_i("Client %i connected to %s!", client->id(), server->url());
 
       // Access via /wsa. Checking if clinet/consumer has already athenticated
@@ -112,6 +121,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_DISCONNECT)
    {
+      if (client->id() == _RedNodeStatus.ClientID)
+      {
+         log_i("Disconnecting master due to disconnect event from ws\r\n");
+         _DisconnectRedNode();
+      }
+
       if (_bIsConsumerArray[client->id()])
       {
          _iNumOfConsumers--;
@@ -126,6 +141,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_PONG)
    {
+      if (client->id() == _RedNodeStatus.ClientID)
+      {
+         _RedNodeStatus.LastReply = millis();
+         log_d("Pong received from master (%lu)!\r\n", millis());
+      }
       log_d("ws[%s][%u] pong[%u]: %s", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
@@ -294,10 +314,39 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       }
       else
       {
-         if (LightsController.bModeNAFA)
-            LightsController.WarningStartSequence();
+         if (_bBlueNodePresent)
+         {
+            unsigned long ulStartTime = GPSHandler.GetEpochTime() + 2;
+
+            StaticJsonDocument<bsActionScheduleStartRace> jsonDoc;
+
+            JsonObject root = jsonDoc.to<JsonObject>();
+
+            JsonObject action = root.createNestedObject("action");
+            action["actionType"] = "ScheduleStartRace";
+            JsonObject action_actionData = action.createNestedObject("actionData");
+            action_actionData["startTime"] = ulStartTime;
+
+            String strScheduleStartMessage;
+            serializeJson(root, strScheduleStartMessage);
+            BlueNodeHandler.sendToBlueNode(strScheduleStartMessage);
+
+            long lMillisToStart = GPSHandler.GetMillisToEpochSecond(ulStartTime);
+            if (lMillisToStart < 0)
+               return false;
+            
+            if (LightsController.bModeNAFA)
+               LightsController.WarningStartSequence(lMillisToStart + millis());
+            else
+               LightsController.InitiateStartSequence(lMillisToStart + millis());
+         }
          else
-            LightsController.InitiateStartSequence();
+         {
+            if (LightsController.bModeNAFA)
+               LightsController.WarningStartSequence();
+            else
+               LightsController.InitiateStartSequence();
+         }
          return true;
       }
    }
@@ -315,6 +364,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          LightsController.DeleteSchedules();
          RaceHandler.bExecuteStopRace = true;
+         if (_bBlueNodePresent)	
+            BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"StopRace\"}}");
          return true;
       }
    }
@@ -332,6 +383,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          RaceHandler.bExecuteResetRace = true;
          LightsController.bExecuteResetLights = true;
+         if (_bBlueNodePresent)	
+            BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"ResetRace\"}}");
          return true;
       }
    }
@@ -348,13 +401,50 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       RaceHandler.SetDogFault(iDogNum);
       return true;
    }
+   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave	
+   {	
+      //Check if race is in reset state. Instead of returning error if it isn't, we just stop and reset it.	
+      if (RaceHandler.RaceState != RaceHandler.RESET)	
+      {	
+         LightsController.DeleteSchedules();	
+         RaceHandler.bExecuteStopRace = true;	
+         RaceHandler.bExecuteResetRace = true;	
+         LightsController.bExecuteResetLights = true;	
+      }	
+
+      String StartTime = ActionObj["actionData"]["startTime"];	
+
+      unsigned long lStartEpochTime = StartTime.toInt();	
+      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);	
+      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);	
+
+      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);	
+
+      if (lMillisToStart < 0)	
+      {	
+         //ReturnError = "Requested starttime is in the past!";	
+         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);	
+         return false;	
+      }	
+
+      if (LightsController.bModeNAFA)	
+         LightsController.WarningStartSequence(lMillisToStart + millis());	
+      else	
+         LightsController.InitiateStartSequence(lMillisToStart + millis());	
+      return true;	
+   }	
+   else if (ActionType == "AnnounceBlue")	
+   {	
+      log_i("We have an ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
+      BlueNodeHandler.configureBlueNode(Client->remoteIP());
+      _bBlueNodePresent = true;
+      return true;
+   }
    else if (ActionType == "AnnounceConsumer")
    {
       log_d("We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
-      {
          _iNumOfConsumers++;
-      }
       _bIsConsumerArray[Client->id()] = true;
       bUpdateRaceData = true;
       bSendRaceData = true;
@@ -432,51 +522,6 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          RaceHandler.ToggleRerunsOffOn(0);
       return true;
    }
-   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
-   {
-      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-      {
-         // ReturnError = "Race was already stopped!";
-         bUpdateTimerWebUIdata = true;
-         bSendRaceData = true;
-         bUpdateLights = true;
-         return false;
-      }
-      else
-      {
-         LightsController.DeleteSchedules();
-         RaceHandler.bExecuteStopRace = true;
-         RaceHandler.bExecuteResetRace = true;
-         LightsController.bExecuteResetLights = true;
-         return true;
-      }
-
-
-      String StartTime = ActionObj["actionData"]["startTime"];
-
-      unsigned long lStartEpochTime = StartTime.toInt();
-      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
-      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
-
-      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
-
-      if (lMillisToStart < 0)
-      {
-         //ReturnError = "Requested starttime is in the past!";
-         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
-         return false;
-      }
-
-      RaceHandler.StartRace(lMillisToStart + millis());
-      return true;
-   }
-   else if (ActionType == "AnnounceBlue")
-   {
-      log_i("We have an ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
-      BlueNodeHandler.configureBlueNode(Client->remoteIP());
-      _bBlueNodePresent = true;
-      return true;
-   }
    else
    {
       // ReturnError = "Unknown action received!";
@@ -501,32 +546,18 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    if (wsBuffer)
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       if (iClientId == -1)
       {
-         _ws->textAll(wsBuffer);
-         /*uint8_t iId = 0;
-         for (auto &isConsumer : _bIsConsumerArray)
+         for (uint8_t i = 1; i <= _ws->count(); i++)
          {
-            if (isConsumer)
+            log_d("i: %i | _ws->count(): %i | _IsConsumerArray[i]: %i", i, _ws->count(), _bIsConsumerArray[i]);
+            if (_bIsConsumerArray[i])
             {
-               // log_d("Getting client obj for id %i", iId);
-               AsyncWebSocketClient *client = _ws->client(iId);
-               if (client->queueIsFull())
-               {
-                  log_d("Deactivating consumer %i", iId);
-                  _ws->close(iId);
-                  _iNumOfConsumers--;
-                  _bIsConsumerArray[client->id()] = false;
-               }
-               else if (client && client->status() == WS_CONNECTED)
-               {
-                  // log_d("Generic Race Data update. Sending to client %i", iId);
-                  client->text(wsBuffer);
-               }
+               //_ws->text(i, (char *)wsBuffer);
+               AsyncWebSocketClient *client = _ws->client(i);
+               client->text(wsBuffer);
             }
-            iId++;
-         }*/
+         } 
       }
       else
       {
@@ -799,7 +830,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
 
 void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
 {
-   uint8_t iId = 0;
+   uint8_t iId = 1;
    for (auto &isConsumer : _bIsConsumerArray)
    {
       if (isConsumer)
