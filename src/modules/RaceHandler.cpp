@@ -1218,7 +1218,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 ///   ISR function for sensor 1, this function will record the sensor number, microseconds and
 ///   state (HIGH/LOW) of the sensor in the interrupt queue.
 /// </summary>
-void RaceHandlerClass::TriggerSensor1()
+void IRAM_ATTR RaceHandlerClass::TriggerSensor1(portMUX_TYPE *spinlock)
 {
    if (bIgnoreSensors)
       return;
@@ -1230,14 +1230,18 @@ void RaceHandlerClass::TriggerSensor1()
          LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
+   {
+      taskENTER_CRITICAL_ISR(spinlock);
       _QueuePush({bRunDirectionInverted ? 2 : 1, MICROS, digitalRead(_iS1Pin)});
+      taskEXIT_CRITICAL_ISR(spinlock);
+   }
 }
 
 /// <summary>
 ///   ISR function for sensor 2, this function will record the sensor number, microseconds and
 ///   state (HIGH/LOW) of the sensor in the interrupt queue.
 /// </summary>
-void RaceHandlerClass::TriggerSensor2()
+void IRAM_ATTR RaceHandlerClass::TriggerSensor2(portMUX_TYPE *spinlock)
 {
    if (bIgnoreSensors)
       return;
@@ -1249,7 +1253,11 @@ void RaceHandlerClass::TriggerSensor2()
          LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
+   {
+      taskENTER_CRITICAL_ISR(spinlock);
       _QueuePush({bRunDirectionInverted ? 1 : 2, MICROS, digitalRead(_iS2Pin)});
+      taskEXIT_CRITICAL_ISR(spinlock);
+   }
 }
 
 /// <summary>
@@ -1409,7 +1417,9 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   if (_bWrongRunDirectionDetected && iDogNumber == 0)
+      strDogTime = " <-  ->";
+   else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";

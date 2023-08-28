@@ -49,8 +49,8 @@ public:
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
-   void TriggerSensor1();
-   void TriggerSensor2();
+   void IRAM_ATTR TriggerSensor1(portMUX_TYPE *spinlock);
+   void IRAM_ATTR TriggerSensor2(portMUX_TYPE *spinlock);
 
    enum DogFaults
    {
