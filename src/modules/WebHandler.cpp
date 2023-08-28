@@ -56,7 +56,6 @@ void WebHandlerClass::init(int webPort)
 
    for (bool &bIsConsumer : _bIsConsumerArray)
       bIsConsumer = false;
-
    _iNumOfConsumers = 0;
 }
 
@@ -104,7 +103,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          _RedNodeStatus.LastReply = millis();
          //_RedNodeStatus.LastCheck = millis();
       }
-
       log_i("Client %i connected to %s!", client->id(), server->url());
 
       // Access via /wsa. Checking if clinet/consumer has already athenticated
@@ -308,10 +306,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    if (ActionType == "StartRace")
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
-      {
          // ReturnError = String("Race was not reset, stop and reset it first!");
          return false;
-      }
       else
       {
          if (_bBlueNodePresent)
@@ -843,7 +839,7 @@ void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
             log_d("Closing client %i", iId);
             client->close();
             _iNumOfConsumers--;
-            _bIsConsumerArray[client->id()] = false;
+            _bIsConsumerArray[iId] = false;
          }
       }
       iId++;

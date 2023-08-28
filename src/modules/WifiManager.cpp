@@ -25,23 +25,23 @@ void WifiManagerClass::SetupWiFi()
     WiFi.onEvent(std::bind(&WifiManagerClass::WiFiEvent, this, std::placeholders::_1));
     uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
     _strAPName = SettingsManager.getSetting("APName");
-    String strAPPass = SettingsManager.getSetting("APPass");
+    _strAPPass = SettingsManager.getSetting("APPass");
     log_i("Starting ETS mode %i", iOpMode);
-    log_i("Reference SSID: %s, pass: %s\r\n", _strAPName.c_str(), strAPPass.c_str());
+    log_i("Reference SSID: %s, pass: %s\r\n", _strAPName.c_str(), _strAPPass.c_str());
     if (iOpMode == SystemModes::RED || iOpMode == SystemModes::SINGLE)
     {
         _IPGateway = IPAddress(192, 168, 20, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
         if (!WiFi.mode(WIFI_MODE_AP) ||
-            !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()) ||
+            !WiFi.softAP(_strAPName.c_str(), _strAPPass.c_str()) ||
             !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
         {
             log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
         }
 
         // OTA setup
-        String strAPPass = SettingsManager.getSetting("APPass");
-        ArduinoOTA.setPassword(strAPPass.c_str());
+        String _strAPPass = SettingsManager.getSetting("APPass");
+        ArduinoOTA.setPassword(_strAPPass.c_str());
         ArduinoOTA.setPort(3232);
         ArduinoOTA.onStart([](){
             String type;
@@ -84,11 +84,11 @@ void WifiManagerClass::SetupWiFi()
         _strAPName += "_BLUE";
         _IPGateway = IPAddress(192, 168, 21, 1);
         _IPSubnet = IPAddress(255, 255, 255, 0);
-        if (!WiFi.mode(WIFI_MODE_APSTA) || !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
+        if (!WiFi.mode(WIFI_MODE_APSTA) || !WiFi.softAP(_strAPName.c_str(), _strAPPass.c_str()))
         {
             log_w("Error initializing softAP with name %s!", _strAPName.c_str());
         }
-        WiFi.begin(_strSTAName.c_str(), strAPPass.c_str());
+        WiFi.begin(_strSTAName.c_str(), _strAPPass.c_str());
     }
     else
         log_e("Got unknown mode, no idea how I should start...");
