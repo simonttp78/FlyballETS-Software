@@ -125,6 +125,7 @@ private:
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
+   bool _bWrongRunDirectionDetected = false;
    long long _llLastDogTimeReturnTimeStamp[4];
    int8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];
