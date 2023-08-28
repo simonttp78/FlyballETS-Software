@@ -435,9 +435,9 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          LightsController.InitiateStartSequence(lMillisToStart + millis());
       return true;
    }
-   else if (ActionType == "AnnounceSlave")
+   else if (ActionType == "AnnounceBlue")
    {
-      log_i("We have a slave with IP %s", Client->remoteIP().toString().c_str());
+      log_i("We have a Blue node with IP %s", Client->remoteIP().toString().c_str());
       BlueNodeHandler.configureBlueNode(Client->remoteIP());
       _bBlueNodePresent = true;
       return true;
@@ -448,8 +448,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (!_bIsConsumerArray[Client->id()])
          _iNumOfConsumers++;
       _bIsConsumerArray[Client->id()] = true;
-      bUpdateRaceData = true;
-      bSendRaceData = true;
+      //bUpdateRaceData = true;
+      //bSendRaceData = true;
       bUpdateLights = true;
       return true;
    }
@@ -534,6 +534,9 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
 
 void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
+   if (_iNumOfConsumers == 0)
+      return;
+
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    // log_d("Getting Lights state");
@@ -550,18 +553,18 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
-      //serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
+      //log_d("LightsData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
-         for (uint8_t i = 0; i < _ws->count(); i++)
+         /*for (uint8_t i = 1; i <= _ws->count(); i++)
          {
             if (_bIsConsumerArray[i])
             {
-               _ws->text(i, (char *)buffer->data());
+               AsyncWebSocketClient *client = _ws->client(i);
+               client->text(buffer);
             }
-         }
+         }*/
       }
       else
       {
@@ -578,14 +581,15 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    if (_iNumOfConsumers == 0)
       return;
 
-   StaticJsonDocument<bsRaceDataArray> JsonRaceDataDoc;
+   log_d("I was here 1.");
+   StaticJsonDocument<8192> JsonRaceDataDoc;
    JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
    JsonArray JsonRaceData = JsonRoot.createNestedArray("RaceData");
 
-   StaticJsonDocument<bsRaceData> JsonRedNodeRaceDataDoc;
+   StaticJsonDocument<4096> JsonRedNodeRaceDataDoc;
    JsonObject JsonRedNodeRaceData = JsonRedNodeRaceDataDoc.to<JsonObject>();
 
-   StaticJsonDocument<bsRaceData> JsonBlueNodeRaceDataDoc;
+   StaticJsonDocument<4096> JsonBlueNodeRaceDataDoc;
    JsonObject JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.to<JsonObject>();
 
    if (bUpdateRaceData)
@@ -614,6 +618,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       bUpdateThisRaceDataField[rerunsOff] = false;
    }
 
+   log_d("I was here 2.");
    JsonArray JsonDogDataArray = JsonRedNodeRaceData.createNestedArray("dogData");
    // Update dogs times, crossing/entry times and re-run info
    for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
@@ -648,6 +653,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          bUpdateThisRaceDataField[i] = false;
       }
    }
+   log_d("I was here 3.");
    JsonRaceData.add(JsonRedNodeRaceData);
    log_d("[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
 
@@ -683,53 +689,36 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       
    bUpdateTimerWebUIdata = false;
    bUpdateRaceData = false;
-
-   String strJsonRaceData;
-   serializeJson(JsonRaceDataDoc, strJsonRaceData);
-   log_d("Sending back RD array: %s\r\n", strJsonRaceData.c_str());
-   if (iClientId == -1)
+   
+   log_d("I was here 4.");
+   size_t len = measureJson(JsonRaceDataDoc);
+   std::shared_ptr<std::vector<uint8_t>> buffer;
+   buffer = std::make_shared<std::vector<uint8_t>>(len);
+   if (std::move(buffer))
    {
-      uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray)
-      {
-         if (isConsumer)
-         {
-            log_d("Getting client obj for id %i\r\n", iId);
-            AsyncWebSocketClient *client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED)
-            {
-               log_d("Sending to client %i\r\n", iId);
-               client->text(strJsonRaceData);
-            }
-         }
-         iId++;
-      }
-   }
-   else
-   {
-      log_d("Sending to client %i\r\n", iClientId);
-      _ws->text(iClientId, strJsonRaceData);
-   }
-   _lLastRaceDataBroadcast = _lLastBroadcast = millis();
-   bSendRaceData = false;
-
-   /*size_t len = measureJson(JsonRaceDataDoc);
-   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-   if (wsBuffer)
-   {
-      serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
-      // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
+      serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
+      log_d("RaceData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
       if (iClientId == -1)
-         _ws->textAll(wsBuffer);
+      {
+         _ws->textAll(std::move(buffer));
+         /*for (uint8_t i = 1; i <= _ws->count(); i++)
+         {
+            if (_bIsConsumerArray[i])
+            {
+               AsyncWebSocketClient *client = _ws->client(i);
+               client->text(std::move(buffer));
+            }
+         }*/
+      }
       else
       {
          // log_d("Specific update. Sending to client %i", iClientId);
          AsyncWebSocketClient *client = _ws->client(iClientId);
-         client->text(wsBuffer);
+         client->text(std::move(buffer));
       }
       _lLastRaceDataBroadcast = _lLastBroadcast = millis();
       bSendRaceData = false;
-   }*/
+   }
 }
 
 bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
@@ -829,42 +818,40 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       JsonSystemData["bat"] = BatterySensor.GetBatteryPercentage();
       JsonSystemData["dir"] = _strRunDirection;
 
-      String strJsonSystemData;
-      serializeJson(JsonSystemDataDoc, strJsonSystemData);
-
-      if (iClientId == -1)
+      size_t len = measureJson(JsonSystemDataDoc);
+      std::shared_ptr<std::vector<uint8_t>> buffer;
+      buffer = std::make_shared<std::vector<uint8_t>>(len);
+      if (std::move(buffer))
       {
-         //_ws->textAll(wsBuffer);
-         uint8_t iId = 0;
-         for (auto &isConsumer : _bIsConsumerArray)
+         serializeJson(JsonSystemDataDoc, (char *)buffer->data(),len);
+         log_d("SystemData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+         if (iClientId == -1)
          {
-            if (isConsumer)
+            _ws->textAll(std::move(buffer));
+            /*for (uint8_t i = 1; i <= _ws->count(); i++)
             {
-               // log_d("Getting client obj for id %i", iId);
-               AsyncWebSocketClient *client = _ws->client(iId);
-               if (client && client->status() == WS_CONNECTED)
+               if (_bIsConsumerArray[i])
                {
-                  log_d("Sending to client %i\r\n", iId);
-                  client->text(strJsonSystemData);
+                  AsyncWebSocketClient *client = _ws->client(i);
+                  client->text(std::move(buffer));
                }
-            }
-            iId++;
+            }*/
          }
+         else
+         {
+            // log_d("Specific update. Sending to client %i", iClientId);
+            AsyncWebSocketClient *client = _ws->client(iClientId);
+            client->text(std::move(buffer));
+         }
+         _lLastSystemDataBroadcast = _lLastBroadcast = millis();
       }
-      else
-      {
-         // log_d("Specific update. Sending to client %i", iClientId);
-         _ws->text(iClientId, strJsonSystemData);
-      }
-      _lLastSystemDataBroadcast = _lLastBroadcast = millis();
-      // log_d("Sent sysdata at %lu", millis());
    }
    log_d("Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
 {
-   uint8_t iId = 0;
+   uint8_t iId = 1;
    for (auto &isConsumer : _bIsConsumerArray)
    {
       if (isConsumer)
@@ -878,7 +865,7 @@ void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
             log_d("Closing client %i", iId);
             client->close();
             _iNumOfConsumers--;
-            _bIsConsumerArray[client->id()] = false;
+            _bIsConsumerArray[iId] = false;
          }
       }
       iId++;
