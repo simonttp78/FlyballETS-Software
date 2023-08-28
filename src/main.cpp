@@ -578,6 +578,7 @@ void Core1Race(void *parameter)
       Simulator.Main();
    #endif
       RaceHandler.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -587,6 +588,7 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LightsController.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -596,7 +598,7 @@ void Core1Blue(void *parameter)
    for (;;)
    {
       BlueNodeHandler.loop();
-      vTaskDelay(5);
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -606,5 +608,6 @@ void Core1Blue(void *parameter)
    for (;;)
    {
       LCDController.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }*/
