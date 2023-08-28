@@ -399,41 +399,41 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       RaceHandler.SetDogFault(iDogNum);
       return true;
    }
-   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave	
-   {	
-      //Check if race is in reset state. Instead of returning error if it isn't, we just stop and reset it.	
-      if (RaceHandler.RaceState != RaceHandler.RESET)	
-      {	
-         LightsController.DeleteSchedules();	
-         RaceHandler.bExecuteStopRace = true;	
-         RaceHandler.bExecuteResetRace = true;	
-         LightsController.bExecuteResetLights = true;	
+   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   {
+      //Check if race is in reset state. Instead of returning error if it isn't, we just stop and reset it.
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         LightsController.DeleteSchedules();
+         RaceHandler.bExecuteStopRace = true;
+         RaceHandler.bExecuteResetRace = true;
+         LightsController.bExecuteResetLights = true;
       }	
 
-      String StartTime = ActionObj["actionData"]["startTime"];	
+      String StartTime = ActionObj["actionData"]["startTime"];
 
-      unsigned long lStartEpochTime = StartTime.toInt();	
-      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);	
-      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);	
+      unsigned long lStartEpochTime = StartTime.toInt();
+      log_d("StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
+      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
 
-      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);	
+      log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
 
-      if (lMillisToStart < 0)	
+      if (lMillisToStart < 0)
       {	
-         //ReturnError = "Requested starttime is in the past!";	
-         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);	
-         return false;	
+         //ReturnError = "Requested starttime is in the past!";
+         log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
+         return false;
       }	
 
-      if (LightsController.bModeNAFA)	
-         LightsController.WarningStartSequence(lMillisToStart + millis());	
-      else	
-         LightsController.InitiateStartSequence(lMillisToStart + millis());	
-      return true;	
-   }	
-   else if (ActionType == "AnnounceBlue")	
-   {	
-      log_i("We have ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
+      if (LightsController.bModeNAFA)
+         LightsController.WarningStartSequence(lMillisToStart + millis());
+      else
+         LightsController.InitiateStartSequence(lMillisToStart + millis());
+      return true;
+   }
+   else if (ActionType == "AnnounceBlue")
+   {
+      log_i("We have Blue ETS with IP %s", Client->remoteIP().toString().c_str());
       BlueNodeHandler.configureBlueNode(Client->remoteIP());
       _bBlueNodePresent = true;
       return true;
@@ -532,7 +532,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    if (_iNumOfConsumers == 0)
       return;
-   
+
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    // log_d("Getting Lights state");
@@ -633,6 +633,40 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          bUpdateThisRaceDataField[i] = false;
       }
    }
+   
+   //JsonRaceData.add(JsonRedNodeRaceData);
+   log_d("Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
+
+   /*if (_bBlueNodePresent)
+   {
+      log_d("Requesting blue ETS racedata...\r\n");
+   #define USE_STRING
+
+   #ifdef USE_STRING
+      String strJsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData();
+      log_d("Blue ETS racedata: %s\r\n", strJsonBlueNodeRaceData.c_str());
+      DeserializationError error = deserializeJson(JsonBlueNodeRaceDataDoc, strJsonBlueNodeRaceData);
+      //char * strJsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData2();
+      //log_d("Blue node racedata: %s, length: %i\r\n", strJsonBlueNodeRaceData, strlen(strJsonBlueNodeRaceData));
+      //DeserializationError error = deserializeJson(jsonBlueNodeRaceDataDoc, strJsonBlueNodeRaceData, strlen(strJsonBlueNodeRaceData));
+      if (error)
+         log_e("Error parsing json data from Blue ETS: %s\r\n", error.c_str());
+      JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.as<JsonObject>();
+   #else
+      JsonObject JsonBlueNodeRaceData = BlueNodeHandler.getBlueNodeRaceData1();
+
+   #endif // USE_STRING
+
+      String strJsonRaceDataTest;
+      serializeJson(JsonBlueNodeRaceData, strJsonRaceDataTest);
+      log_d("Got json Blue ETS racedata: %s, length: %i\r\n", strJsonRaceDataTest.c_str(), measureJson(JsonBlueNodeRaceData));
+
+      if (measureJson(JsonBlueNodeRaceData) > 2)
+         JsonRaceData.add(JsonBlueNodeRaceData);
+      else
+         log_i("Got invalid Blue ETS racedata (length: %i)", measureJson(JsonBlueNodeRaceData));
+   }*/
+
    bUpdateTimerWebUIdata = false;
    bUpdateRaceData = false;
 
@@ -643,7 +677,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
-      // log_d("RaceData wsBuffer to send: %s", (char *)buffer->data());
+      // log_d("RaceData Buffer to send: %s", (char *)buffer->data());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -771,7 +805,6 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
             client->text(std::move(buffer));
          }
       _lLastSystemDataBroadcast = _lLastBroadcast = millis();
-      // log_d("Sent sysdata at %lu", millis());
    }
 }
 
