@@ -4,16 +4,6 @@
 #include <SPIFFS.h>
 #include "config.h"
 
-void SettingsManagerClass::loop()
-{
-   // do we really need to check in loop if there is something to write???
-   if (_settings_save)
-   {
-      log_i("[SETTINGS] Saving to EEPROM");
-      EEPROM.commit();
-      _settings_save = false;
-   }
-}
 
 void SettingsManagerClass::init()
 {
@@ -27,9 +17,20 @@ void SettingsManagerClass::init()
        { return EEPROM.read(pos); },
        [](size_t pos, char value)
        { EEPROM.write(pos, value); },
-       []() {});
+       []() { EEPROM.commit(); });
 
    setDefaultSettings();
+}
+
+void SettingsManagerClass::loop()
+{
+   // do we really need to check in loop if there is something to write???
+   if (_settings_save)
+   {
+      log_i("[SETTINGS] Saving to EEPROM");
+      EEPROM.commit();
+      _settings_save = false;
+   }
 }
 
 String SettingsManagerClass::getSetting(const String &key, String defaultValue)
@@ -37,19 +38,21 @@ String SettingsManagerClass::getSetting(const String &key, String defaultValue)
    String value;
    if (!Embedis::get(key, value))
       value = defaultValue;
+   //log_d("Returning value %s for setting %s", value.c_str(), key.c_str());
    return value;
 }
 
 String SettingsManagerClass::getSetting(const String &key)
 {
-   return getSetting(key, "");
+   String strReturnValue = getSetting(key, "");
+   return strReturnValue;
 }
 
-// template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
-bool SettingsManagerClass::setSetting(const String &key, String value)
+void SettingsManagerClass::setSetting(const String &key, String value)
 {
+   //log_d("Setting value %s for key %s", value.c_str(), key.c_str());
+   Embedis::set(key, String(value));
    saveSettings();
-   return Embedis::set(key, String(value));
 }
 
 void SettingsManagerClass::saveSettings()
@@ -65,59 +68,62 @@ bool SettingsManagerClass::hasSetting(const String &key)
 
 void SettingsManagerClass::setDefaultSettings()
 {
+   bool shouldSave = false;
    if (!hasSetting("AdminPass"))
    {
       setSetting("AdminPass", "FlyballETS.1234");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("APName"))
    {
       setSetting("APName", "FlyballETS");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("APPass"))
    {
       setSetting("APPass", "FlyballETS.1234");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("RunDirectionInverted"))
    {
       setSetting("RunDirectionInverted", String("0"));
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("StartingSequenceNAFA"))
    {
       setSetting("StartingSequenceNAFA", String("0"));
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("LaserOnTimer"))
    {
       setSetting("LaserOnTimer", String("60"));
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("Accuracy3digits"))
    {
       setSetting("Accuracy3digits", String("0"));
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("CommaInCsv"))
    {
       setSetting("CommaInCsv", String("0"));
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("OperationMode"))
    {
       setSetting("OperationMode", String("0"));
-      saveSettings();
+      shouldSave = true;
    }
+   if (shouldSave)
+      saveSettings();
 }
 
 SettingsManagerClass SettingsManager;

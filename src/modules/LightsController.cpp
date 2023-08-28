@@ -118,9 +118,9 @@ void LightsControllerClass::Main()
 /// <summary>
 ///   Set start warning sequence used by NAFTA.
 /// </summary>
-void LightsControllerClass::WarningStartSequence()
+void LightsControllerClass::WarningStartSequence(uint16_t iOffset)
 {
-   uint16_t iOffset = 10; // Offset of 10ms introduced to assure proper synchronization
+   //uint16_t iOffset = 10; // Offset of 10ms introduced to assure proper synchronization
    // Set schedule for GREEN4 light
    _lLightsOnSchedule[7] = millis() + iOffset;        // Turn on "NOW"
    _lLightsOutSchedule[7] = millis() + iOffset + 150; // Turn off after 150ms
@@ -147,12 +147,12 @@ void LightsControllerClass::WarningStartSequence()
 /// <summary>
 ///   Initiate start sequence, should be called if starting lights sequence should be initiated.
 /// </summary>
-void LightsControllerClass::InitiateStartSequence()
+void LightsControllerClass::InitiateStartSequence(uint16_t iOffset)
 {
    // Set start sequence, we need to schedule the lights on/off times.
    if (bModeNAFA)
    {
-      uint16_t iOffset = 1000; // 1s offset after warning sequence ended
+      uint16_t iOffset = 1000; // fixed 1s offset after warning sequence ended
       // Set schedule for YELLOW1 light
       _lLightsOnSchedule[2] = millis() + iOffset;         // Turn on
       _lLightsOutSchedule[2] = millis() + iOffset + 1000; // Turn off after 1 seconds
@@ -171,7 +171,7 @@ void LightsControllerClass::InitiateStartSequence()
    }
    else
    {
-      uint16_t iOffset = 10; // Offset of 10ms introduced to assure proper synchronization
+      //uint16_t iOffset = 10; // Offset of 10ms introduced to assure proper synchronization
       // Set schedule for RED1 light
       _lLightsOnSchedule[3] = millis() + iOffset;         // Turn on
       _lLightsOutSchedule[3] = millis() + iOffset + 1000; // keep on for 1 second

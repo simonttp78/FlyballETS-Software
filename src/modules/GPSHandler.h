@@ -30,7 +30,9 @@ public:
    char *GetUtcDateAndTime();
    char *GetLocalTimestamp();
    char *GetDate();
+   unsigned long GetTimeStampAge();
    long GetMillisToEpochSecond(unsigned long lEpochSecond);
+   unsigned long GetEpochTime();
    time_t timeLocal;
 };
 extern GPSHandlerClass GPSHandler;
