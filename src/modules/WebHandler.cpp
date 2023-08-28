@@ -85,6 +85,7 @@ void WebHandlerClass::loop()
          }
       }
    }
+   _CheckRedNodeStatus();
 }
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -432,7 +433,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }	
    else if (ActionType == "AnnounceBlue")	
    {	
-      log_i("We have an ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
+      log_i("We have ETS BLUE with IP %s", Client->remoteIP().toString().c_str());
       BlueNodeHandler.configureBlueNode(Client->remoteIP());
       _bBlueNodePresent = true;
       return true;
@@ -833,7 +834,7 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
    bool bAuthResult = request->authenticate("Admin", httpPassword);
    if (!bAuthResult)
    {
-      log_e("[WEBHANDLER] Admin user failed to login!");
+      log_e("Admin user failed to login!");
    }
    return bAuthResult;
 }
@@ -918,9 +919,8 @@ bool WebHandlerClass::RedNodeConnected()
 void WebHandlerClass::_CheckRedNodeStatus()
 {
    if (!_RedNodeStatus.Configured)
-   {
       return;
-   }
+
    if (millis() - _RedNodeStatus.LastCheck > 1200)
    {
       log_d("Checking Blue ETS, if any...\r\n");

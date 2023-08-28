@@ -35,9 +35,7 @@ void WifiManagerClass::SetupWiFi()
         if (!WiFi.mode(WIFI_MODE_AP) ||
             !WiFi.softAP(_strAPName.c_str(), _strAPPass.c_str()) ||
             !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
-        {
-            log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
-        }
+                log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
 
         // OTA setup
         String _strAPPass = SettingsManager.getSetting("APPass");
