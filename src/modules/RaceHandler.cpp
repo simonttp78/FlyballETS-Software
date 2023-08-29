@@ -1377,7 +1377,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   
+
    if (_bWrongRunDirectionDetected && iDogNumber == 0)
       strDogTime = " <-  ->";
    else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])

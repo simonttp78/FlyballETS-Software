@@ -362,7 +362,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          LightsController.DeleteSchedules();
          RaceHandler.bExecuteStopRace = true;
-         if (_bBlueNodePresent)	
+         if (_bBlueNodePresent)
             BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"StopRace\"}}");
          return true;
       }
@@ -381,7 +381,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          RaceHandler.bExecuteResetRace = true;
          LightsController.bExecuteResetLights = true;
-         if (_bBlueNodePresent)	
+         if (_bBlueNodePresent)
             BlueNodeHandler.sendToBlueNode("{ \"action\": {\"actionType\": \"ResetRace\"}}");
          return true;
       }
@@ -408,7 +408,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          RaceHandler.bExecuteStopRace = true;
          RaceHandler.bExecuteResetRace = true;
          LightsController.bExecuteResetLights = true;
-      }	
+      }
 
       String StartTime = ActionObj["actionData"]["startTime"];
 
@@ -419,11 +419,11 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       log_i("Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
 
       if (lMillisToStart < 0)
-      {	
+      {
          //ReturnError = "Requested starttime is in the past!";
          log_i("Race schedule received for the past (%ld ms)!", lMillisToStart);
          return false;
-      }	
+      }
 
       if (LightsController.bModeNAFA)
          LightsController.WarningStartSequence(lMillisToStart + millis());
@@ -548,8 +548,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 
    if (std::move(buffer))
    {
-      serializeJson(jsonLightsDoc, (char *)buffer->data(), len);
-      // log_d("LightsData Buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
+      //log_d("LightsData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
