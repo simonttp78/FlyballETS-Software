@@ -282,7 +282,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (std::move(buffer))
       {
          serializeJson(jsonResponseDoc, (char *)buffer->data(),len);
-         // log_d("Buffer to send: %s", (char *)buffer->data());
+         //std::string strBufferToPrint = (char *)buffer->data();
+         //log_d("Respnse buffer to send: %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
          client->text(std::move(buffer));
       }
    }
@@ -549,7 +550,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
-      //log_d("LightsData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      //std::string strBufferToPrint = (char *)buffer->data();
+      //log_d("LightsData buffer to send: %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -685,7 +687,8 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
-      // log_d("RaceData buffer to send: %s", (char *)buffer->data());
+      std::string strBufferToPrint = (char *)buffer->data();
+      log_d("RaceData buffer to send:\n %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -802,7 +805,8 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(JsonSystemDataDoc, (char *)buffer->data(),len);
-      log_d("SystemData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      //std::string strBufferToPrint = (char *)buffer->data();
+      //log_d("SystemData buffer to send: %s.",(strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
