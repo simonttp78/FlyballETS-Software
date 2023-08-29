@@ -1049,7 +1049,7 @@ void RaceHandlerClass::ResetRace()
       {
          iCurrentRaceId = 0;
          SDcardController.iTagValue = SDcardController.iTagValue + 1;
-      }   
+      }
       else
          iCurrentRaceId++;
       String _sCurrentRaceId = String(iCurrentRaceId + 1);

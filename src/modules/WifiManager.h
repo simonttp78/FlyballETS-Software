@@ -39,8 +39,8 @@ private:
     IPAddress _IPGateway;
     IPAddress _IPSubnet;
     String _strAPName;
-    String _strAPPass;
     String _strSTAName;
+    String _strAPPass;
     uint16_t uiLastProgress = 0; // last % OTA progress value
     unsigned long ulLastWifiCheck = 0;
 };

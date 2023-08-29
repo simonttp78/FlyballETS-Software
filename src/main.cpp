@@ -598,7 +598,7 @@ void Core1Blue(void *parameter)
    for (;;)
    {
       BlueNodeHandler.loop();
-      vTaskDelay(5);
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
