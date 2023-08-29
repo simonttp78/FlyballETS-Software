@@ -581,35 +581,38 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 
    StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
    JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
-   JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
-
+   JsonArray JsonRaceData = JsonRoot.createNestedArray("RaceData");
+   
+   StaticJsonDocument<bsRaceData> JsonRedNodeRaceDataDoc;
+   JsonObject JsonRedNodeRaceData = JsonRedNodeRaceDataDoc.to<JsonObject>();
+   
    if (bUpdateRaceData)
    {
-      JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
-      JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
+      JsonRedNodeRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
+      JsonRedNodeRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
    }
    if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
    {
-      JsonRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
+      JsonRedNodeRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
       bUpdateThisRaceDataField[elapsedTime] = false;
    }
    if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
    {
-      JsonRaceData["cleanTime"] = RaceHandler.GetCleanTime();
+      JsonRedNodeRaceData["cleanTime"] = RaceHandler.GetCleanTime();
       bUpdateThisRaceDataField[cleanTime] = false;
    }
    if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
    {
-      JsonRaceData["raceState"] = RaceHandler.RaceState;
+      JsonRedNodeRaceData["raceState"] = RaceHandler.RaceState;
       bUpdateThisRaceDataField[raceState] = false;
    }
    if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
    {
-      JsonRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
+      JsonRedNodeRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
       bUpdateThisRaceDataField[rerunsOff] = false;
    }
 
-   JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+   JsonArray JsonDogDataArray = JsonRedNodeRaceData.createNestedArray("dogData");
    // Update dogs times, crossing/entry times and re-run info
    for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
    {
@@ -644,11 +647,14 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       }
    }
    
-   //JsonRaceData.add(JsonRedNodeRaceData);
+   JsonRaceData.add(JsonRedNodeRaceData);
    log_d("Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
 
-   /*if (_bBlueNodePresent)
+   if (_bBlueNodePresent)
    {
+      StaticJsonDocument<bsRaceData> JsonBlueNodeRaceDataDoc;
+      JsonObject JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.to<JsonObject>();
+
       log_d("Requesting blue ETS racedata...\r\n");
    #define USE_STRING
 
@@ -675,7 +681,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          JsonRaceData.add(JsonBlueNodeRaceData);
       else
          log_i("Got invalid Blue ETS racedata (length: %i)", measureJson(JsonBlueNodeRaceData));
-   }*/
+   }
 
    bUpdateTimerWebUIdata = false;
    bUpdateRaceData = false;
