@@ -38,7 +38,6 @@ void WifiManagerClass::SetupWiFi()
                 log_w("[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
 
         // OTA setup
-        String _strAPPass = SettingsManager.getSetting("APPass");
         ArduinoOTA.setPassword(_strAPPass.c_str());
         ArduinoOTA.setPort(3232);
         ArduinoOTA.onStart([](){

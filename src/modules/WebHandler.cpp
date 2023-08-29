@@ -553,6 +553,14 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
+         /*for (uint8_t i = 1; i <= _ws->count(); i++)
+         {
+            if (_bIsConsumerArray[i])
+            {
+               AsyncWebSocketClient *client = _ws->client(i);
+               client->text(buffer);
+            }
+         }*/
       }
       else
       {
@@ -677,7 +685,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
-      // log_d("RaceData Buffer to send: %s", (char *)buffer->data());
+      // log_d("RaceData buffer to send: %s", (char *)buffer->data());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -794,16 +802,17 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(JsonSystemDataDoc, (char *)buffer->data(),len);
+      log_d("SystemData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
       if (iClientId == -1)
-         {
-            _ws->textAll(std::move(buffer));
-         }
+      {
+         _ws->textAll(std::move(buffer));
+      }
       else
-         {
-            // log_d("Specific update. Sending to client %i", iClientId);
-            AsyncWebSocketClient *client = _ws->client(iClientId);
-            client->text(std::move(buffer));
-         }
+      {
+         // log_d("Specific update. Sending to client %i", iClientId);
+         AsyncWebSocketClient *client = _ws->client(iClientId);
+         client->text(std::move(buffer));
+      }
       _lLastSystemDataBroadcast = _lLastBroadcast = millis();
    }
 }
