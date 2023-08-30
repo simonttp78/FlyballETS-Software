@@ -282,7 +282,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (std::move(buffer))
       {
          serializeJson(jsonResponseDoc, (char *)buffer->data(),len);
-         // log_d("Buffer to send: %s", (char *)buffer->data());
+         //std::string strBufferToPrint = (char *)buffer->data();
+         //log_d("Respnse buffer to send: %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
          client->text(std::move(buffer));
       }
    }
@@ -549,7 +550,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    if (std::move(buffer))
    {
       serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
-      //log_d("LightsData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      //std::string strBufferToPrint = (char *)buffer->data();
+      //log_d("LightsData buffer to send: %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -577,16 +579,12 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    if (_iNumOfConsumers == 0)
       return;
 
-   log_d("I was here 1.");
-   StaticJsonDocument<8192> JsonRaceDataDoc;
+   StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
    JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
    JsonArray JsonRaceData = JsonRoot.createNestedArray("RaceData");
 
-   StaticJsonDocument<4096> JsonRedNodeRaceDataDoc;
+   StaticJsonDocument<bsRaceData> JsonRedNodeRaceDataDoc;
    JsonObject JsonRedNodeRaceData = JsonRedNodeRaceDataDoc.to<JsonObject>();
-
-   StaticJsonDocument<4096> JsonBlueNodeRaceDataDoc;
-   JsonObject JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.to<JsonObject>();
 
    if (bUpdateRaceData)
    {
@@ -614,7 +612,6 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       bUpdateThisRaceDataField[rerunsOff] = false;
    }
 
-   log_d("I was here 2.");
    JsonArray JsonDogDataArray = JsonRedNodeRaceData.createNestedArray("dogData");
    // Update dogs times, crossing/entry times and re-run info
    for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
@@ -649,13 +646,16 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          bUpdateThisRaceDataField[i] = false;
       }
    }
-   log_d("I was here 3.");
+
    JsonRaceData.add(JsonRedNodeRaceData);
-   log_d("[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
+   log_d("Collected own racedata, length: %i\r\n", measureJson(JsonRaceData));
 
    if (_bBlueNodePresent)
    {
-      log_d("[WEBHANDLER]: Requesting blue ETS racedata...\r\n");
+      StaticJsonDocument<bsRaceData> JsonBlueNodeRaceDataDoc;
+      JsonObject JsonBlueNodeRaceData = JsonBlueNodeRaceDataDoc.to<JsonObject>();
+
+      log_d("Requesting blue ETS racedata...\r\n");
    #define USE_STRING
 
    #ifdef USE_STRING
@@ -686,14 +686,14 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    bUpdateTimerWebUIdata = false;
    bUpdateRaceData = false;
 
-   log_d("I was here 4.");
    size_t len = measureJson(JsonRaceDataDoc);
    std::shared_ptr<std::vector<uint8_t>> buffer;
    buffer = std::make_shared<std::vector<uint8_t>>(len);
    if (std::move(buffer))
    {
       serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
-      log_d("RaceData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      std::string strBufferToPrint = (char *)buffer->data();
+      log_d("RaceData buffer to send:\n %s", (strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -806,21 +806,15 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    size_t len = measureJson(JsonSystemDataDoc);
    std::shared_ptr<std::vector<uint8_t>> buffer;
    buffer = std::make_shared<std::vector<uint8_t>>(len);
+
    if (std::move(buffer))
    {
       serializeJson(JsonSystemDataDoc, (char *)buffer->data(),len);
-      log_d("SystemData buffer to send: %s. No of ws clients is: %i", (char *)buffer->data(), _ws->count());
+      //std::string strBufferToPrint = (char *)buffer->data();
+      //log_d("SystemData buffer to send: %s.",(strBufferToPrint.erase (strBufferToPrint.find ("xV"), strBufferToPrint [strBufferToPrint.length() - 2])).c_str());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
-         /*for (uint8_t i = 1; i <= _ws->count(); i++)
-         {
-            if (_bIsConsumerArray[i])
-            {
-               AsyncWebSocketClient *client = _ws->client(i);
-               client->text(std::move(buffer));
-            }
-         }*/
       }
       else
       {
@@ -830,7 +824,6 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       }
       _lLastSystemDataBroadcast = _lLastBroadcast = millis();
    }
-   log_d("Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
