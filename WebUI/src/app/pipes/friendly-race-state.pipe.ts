@@ -21,6 +21,9 @@ export class FriendlyRaceStatePipe implements PipeTransform {
       case 3:
         returnString = "Stopped";
         break;
+      case 4:
+        returnString = "Scheduled";
+        break;
       default:
         returnString = "Unknown";
         break;
