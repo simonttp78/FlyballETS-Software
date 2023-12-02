@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 
-## [1.14.0]
+## [1.14.0] - 2023-11-28
 
 ### Added
 - SW update info while doing Firmware update via WebUI
