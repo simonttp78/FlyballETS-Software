@@ -1,8 +1,16 @@
 #include "WebHandler.h"
-#include <ElegantOTA.h>
+//#include <ElegantOTA.h>
 
 void WebHandlerClass::init(int webPort)
 {
+   filelist = "";
+   PARAM = "file";
+   opened = false;
+   if (!SPIFFS.begin(true)) {
+      Serial.println("SPIFFS Mount Failed");
+      return;
+   }
+   listDir(SPIFFS, "/", 0);
 
    // Populate the last modification date based on build datetime
    // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
@@ -40,7 +48,7 @@ void WebHandlerClass::init(int webPort)
    // Favicon handler
    _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
 
-   // ElegantOTA
+   /*// ElegantOTA
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
@@ -67,9 +75,68 @@ void WebHandlerClass::init(int webPort)
       }
       else
          Serial.println("Update via WebUI failed.");
-      });
+      });*/
+
+   _server->on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send_P(200, "text/html", upload_html);
+   });
+
+   /*_server->on("/filesystem", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send_P(200, "text/html", FS_HTML, processor_update);
+   });*/
+
+   _server->on("/filelist", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send_P(200, "text/plain", WebHandler.filelist.c_str());
+   });
+
+   _server->on("/testpage", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send(SPIFFS, "/testpage.html", String(), false);
+   });
+
+   _server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest * request) {
+      request->send(200, "text/plain", "Device will reboot in 2 seconds");
+      delay(2000);
+      ESP.restart();
+   });
+
+   _server->on("/doUpdate", HTTP_POST,
+   [](AsyncWebServerRequest * request) {},
+   [](AsyncWebServerRequest * request, const String & filename, size_t index, uint8_t *data, size_t len, bool final) {
+      WebHandler.handleDoUpdate(request, filename, index, data, len, final);
+   });
+
+   _server->on("/doUpload", HTTP_POST, [](AsyncWebServerRequest * request) {
+      WebHandler.opened = false;
+   },
+   [](AsyncWebServerRequest * request, const String & filename, size_t index, uint8_t *data, size_t len, bool final) {
+      WebHandler.handleDoUpload(request, filename, index, data, len, final);
+   });
+
+   _server->on("/delete", HTTP_GET, [] (AsyncWebServerRequest * request) {
+      String inputMessage;
+      String inputParam;
+      // GET input1 value on <ESP_IP>/update?state=<inputMessage>
+      if (request->hasParam(WebHandler.PARAM)) {
+         inputMessage = request->getParam(WebHandler.PARAM)->value();
+         inputParam = WebHandler.PARAM;
+
+         WebHandler.deleteFile(SPIFFS, inputMessage);
+
+         Serial.println("-inputMessage-");
+         Serial.print("File=");
+         Serial.println(inputMessage);
+         Serial.println(" has been deleted");
+
+      }
+      else {
+         inputMessage = "No message sent";
+         inputParam = "none";
+      }
+      request->send(200, "text/plain", "OK");
+   });
 
    _server->begin();
+   //Update.onProgress([this](size_t prg, size_t sz) -> void { printProgress(prg, sz); });
 
    _lLastRaceDataBroadcast = 0;
    _lLastSystemDataBroadcast = 0;
@@ -113,7 +180,8 @@ void WebHandlerClass::loop()
       }
    }
    if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-      ElegantOTA.loop();
+      //ElegantOTA.loop();
+      listDir(SPIFFS, "/", 0);
 }
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -918,6 +986,145 @@ void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
+}
+
+String WebHandlerClass::processor_update(const String& var) {
+  Serial.println(var);
+  if (var == "list") {
+    return F("Hello world!");
+  }
+  return String();
+}
+
+
+
+void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
+  if (!index) {
+    Serial.println("Update");
+    content_len = request->contentLength();
+    // if filename includes spiffs, update the spiffs partition
+    int cmd = (filename.indexOf("spiffs") > -1) ? U_PART : U_FLASH;
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) {
+      Update.printError(Serial);
+    }
+  }
+
+  if (Update.write(data, len) != len) {
+    Update.printError(Serial);
+    Serial.printf("Progress: %d%%\n", (Update.progress() * 100) / Update.size());
+
+  }
+
+  if (final) {
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Ok");
+    response->addHeader("Refresh", "30");
+    response->addHeader("Location", "/");
+    request->send(response);
+    if (!Update.end(true)) {
+      Update.printError(Serial);
+    } else {
+      Serial.println("Update complete");
+      Serial.flush();
+      ESP.restart();
+    }
+  }
+}
+
+void WebHandlerClass::handleDoUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+  if (!index) {
+    content_len = request->contentLength();
+    Serial.printf("UploadStart: %s\n", filename.c_str());
+  }
+
+  if (opened == false) {
+    opened = true;
+    file = SPIFFS.open(String("/") + filename, FILE_WRITE);
+    if (!file) {
+      Serial.println("- failed to open file for writing");
+      return;
+    }
+  }
+
+  if (file.write(data, len) != len) {
+    Serial.println("- failed to write");
+    return;
+  }
+
+  if (final) {
+
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Ok");
+    response->addHeader("Refresh", "20");
+    response->addHeader("Location", "/filesystem");
+    request->send(response);
+    file.close();
+    opened = false;
+    Serial.println("---------------");
+    Serial.println("Upload complete");
+
+  }
+}
+
+
+void WebHandlerClass::printProgress(size_t prg, size_t sz) {
+  Serial.printf("Progress: %d%%\n", (prg * 100) / content_len);
+}
+
+void WebHandlerClass::notFound(AsyncWebServerRequest *request) {
+  if (request->url().startsWith("/")) {
+    request->send(SPIFFS, request->url(), String(), true);
+  } else {
+    request->send(404);
+  }
+}
+
+
+void WebHandlerClass::listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
+  // filelist = "";
+  int i = 0;
+  String partlist;
+  // Serial.printf("Listing directory: %s\r\n", dirname);
+  File root = fs.open(dirname);
+  if (!root) {
+    Serial.println("- failed to open directory");
+    return;
+  }
+  if (!root.isDirectory()) {
+    Serial.println(" - not a directory");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while (file) {
+
+    if (file.isDirectory()) {
+      //  Serial.print("  DIR : ");
+      // Serial.println(file.name());
+      if (levels) {
+        listDir(fs, file.name(), levels - 1);
+      }
+    } else {
+      //  Serial.print("  FILE: ");
+      //   Serial.print(file.name());
+      //  Serial.print("\tSIZE: ");
+      //   Serial.println(file.size());
+      i++;
+      String st_after_symb = String(file.name()).substring(String(file.name()).indexOf("/") + 1);
+
+      partlist +=  String("<tr><td>") + String(i) + String("</td><td>") + String("<a href='") + String(file.name()) + String("'>") + st_after_symb + String("</td><td>") + String(file.size() / 1024) + String("</td><td>") + String("<input type='button' class='btndel' onclick=\"deletef('") + String(file.name()) + String("')\" value='X'>") + String("</td></tr>");
+      filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
+    }
+    file = root.openNextFile();
+  }
+  filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
+}
+
+void WebHandlerClass::deleteFile(fs::FS &fs, const String& path) {
+  Serial.printf("Deleting file: %s\r\n", path);
+  if (fs.remove(path)) {
+    Serial.println("- file deleted");
+  } else {
+    Serial.println("- delete failed");
+  }
 }
 
 WebHandlerClass WebHandler;
