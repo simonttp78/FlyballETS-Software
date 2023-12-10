@@ -22,7 +22,7 @@
 #undef CONFIG_ESP_COREDUMP_CHECK_BOOT
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
-#define FW_VER "1.15.0.1"        // Flyball ETS firmware version
+#define FW_VER "1.15.0.2"        // Flyball ETS firmware version
 
 #define Simulate false           // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
@@ -42,6 +42,6 @@
 #define WS_TICKET_BUFFER_SIZE 8  // Number of websocket tickets kept in memory
 #define WS_TIMEOUT 1800000       // Timeout for secured websocket in miliseconds
 
-#define APP_VER "1.1.0"          // WebUI version
+#define APP_VER "1.1.1"          // WebUI version
 
 #endif

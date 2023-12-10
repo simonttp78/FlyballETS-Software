@@ -9,10 +9,9 @@
 #include <Hash.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include "LCDController.h"
 #include <ESPAsyncWebServer.h>
 #include <Update.h>
-#include <SPIFFS.h>
-#include <FS.h>
 #include "SDcardController.h"
 #include <ArduinoJson.h>
 #include "RaceHandler.h"
@@ -51,8 +50,7 @@ protected:
    void _onHome(AsyncWebServerRequest *request);
    void _onFavicon(AsyncWebServerRequest *request);
    void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
-   void handleDoUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-   void notFound(AsyncWebServerRequest *request);
+   void onProgressRequest(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
    const uint16_t _iRaceDataBroadcastInterval = 750;
@@ -78,7 +76,6 @@ public:
    void init(int webPort);
    void loop();
    void disconnectWsClient(IPAddress ipDisconnectedIP);
-   String processor_update(const String& var);
    void printProgress(size_t prg, size_t sz);
    bool bUpdateLights = false;
    bool bSendRaceData = false;
@@ -109,13 +106,8 @@ public:
 private:
    uint16_t _iPwrOnTag;
    String _strRunDirection;
-   String filelist;
-   const char* PARAM;
-   size_t content_len;
-   File file;
-   bool opened;
-   void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
-   void deleteFile(fs::FS &fs, const String& path);
+   size_t content_len;             
+   int otaProgress = 0;
 };
 
 extern WebHandlerClass WebHandler;

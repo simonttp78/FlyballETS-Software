@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Changed
+- fixed bat default value in WebUI (v1.1.1)
+- migration from ElegantOTA to open source Web OTA update
 
 
 ## [1.14.0] - 2023-11-28
