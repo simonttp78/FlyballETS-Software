@@ -1,6 +1,6 @@
 # extra_scripts = ota_web_upload.py
 # upload_protocol = custom
-# upload_url = http://192.168.20.1/doupdate
+# custom_upload_url = http://192.168.20.1/doupdate
 
 
 import requests
@@ -18,7 +18,7 @@ except ImportError:
 
 def on_upload(source, target, env):
     firmware_path = str(source[0])
-    upload_url = env.GetProjectOption('upload_url')
+    upload_url = env.GetProjectOption('custom_upload_url')
 
     with open(firmware_path, 'rb') as firmware:
         md5 = hashlib.md5(firmware.read()).hexdigest()

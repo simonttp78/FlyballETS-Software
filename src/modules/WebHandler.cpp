@@ -234,7 +234,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       // Parse JSON input
-      StaticJsonDocument<768> jsonRequestDoc;
+      JsonDocument jsonRequestDoc;
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)
@@ -245,14 +245,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       _lWebSocketReceivedTime = millis();
-      // const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
-      const size_t bufferSize = 384;
-      StaticJsonDocument<bufferSize> jsonResponseDoc;
+      JsonDocument jsonResponseDoc;
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
       if (request.containsKey("action"))
       {
-         JsonObject ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
+         JsonObject ActionResult = JsonResponseRoot["ActionResult"].to<JsonObject>();
          String errorText;
          bool result = _DoAction(request["action"].as<JsonObject>(), &errorText, client);
          ActionResult["success"] = result;
@@ -260,7 +258,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
       else if (request.containsKey("config"))
       {
-         JsonObject ConfigResult = JsonResponseRoot.createNestedObject("configResult");
+         JsonObject ConfigResult = JsonResponseRoot["configResult"].to<JsonObject>();
          String errorText;
          JsonArray config = request["config"].as<JsonArray>();
          // We allow setting config only over admin websocket
@@ -280,8 +278,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       else if (request.containsKey("getData"))
       {
          String dataName = request["getData"];
-         JsonObject DataResult = JsonResponseRoot.createNestedObject("dataResult");
-         JsonObject DataObject = DataResult.createNestedObject(dataName + "Data");
+         JsonObject DataResult = JsonResponseRoot["dataResult"].to<JsonObject>();
+         JsonObject DataObject = DataResult[dataName + "Data"].to<JsonObject>();
          bool result;
          if (dataName == "config" && !isAdmin)
          {
@@ -490,10 +488,10 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    //log_d("Getting Lights state");
-   StaticJsonDocument<96> jsonLightsDoc;
+   JsonDocument jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 
-   JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
+   JsonArray JsonLightsData = JsonRoot["LightsData"].to<JsonArray>();
    copyArray(LightStates.State, JsonLightsData);
 
    size_t len = measureJson(jsonLightsDoc);
@@ -549,9 +547,9 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    }
    else
    {
-      StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
+      JsonDocument JsonRaceDataDoc;
       JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
-      JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      JsonObject JsonRaceData = JsonRoot["RaceData"].to<JsonObject>();
 
       if (bUpdateRaceData)
       {
@@ -579,11 +577,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          bUpdateThisRaceDataField[rerunsOff] = false;
       }
 
-      JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+      JsonArray JsonDogDataArray = JsonRaceData["dogData"].to<JsonArray>();
       // Update dogs times, crossing/entry times and re-run info
       for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
-         JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonObject JsonDogData = JsonDogDataArray.add<JsonObject>();
          JsonDogData["dogNr"] = i;
          if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
@@ -600,11 +598,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          }
          if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
-            JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+            JsonArray JsonDogDataTimingArray = JsonDogData["timing"].to<JsonArray>();
             char cForJson[9];
             for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
             {
-               JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+               JsonObject DogTiming = JsonDogDataTimingArray.add<JsonObject>();
                RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
                DogTiming["time"] = cForJson;
                RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
@@ -713,11 +711,11 @@ bool WebHandlerClass::_GetData(String dataType, JsonObject Data)
    }
    else if (dataType == "triggerQueue")
    {
-      JsonArray triggerQueue = Data.createNestedArray("triggerQueue");
+      JsonArray triggerQueue = Data["triggerQueue"].to<JsonArray>();
 
       for (auto &trigger : RaceHandler._OutputTriggerQueue)
       {
-         JsonObject triggerObj = triggerQueue.createNestedObject();
+         JsonObject triggerObj = triggerQueue.add<JsonObject>();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
          triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler.llRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
@@ -745,10 +743,10 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       else
          _strRunDirection = (char *)"<-";
 
-      StaticJsonDocument<192> JsonSystemDataDoc;
+      JsonDocument JsonSystemDataDoc;
       JsonObject JsonRoot = JsonSystemDataDoc.to<JsonObject>();
 
-      JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
+      JsonObject JsonSystemData = JsonRoot["SystemData"].to<JsonObject>();
       JsonSystemData["ut"] = MICROS / 1000000;
       JsonSystemData["FW"] = (char *)FW_VER;
       JsonSystemData["Tag"] = _iPwrOnTag;

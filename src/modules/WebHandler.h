@@ -3,7 +3,6 @@
 #define _WEBHANDLER_h
 
 #include "config.h"
-#include "global.h"
 #include "Arduino.h"
 #include "SettingsManager.h"
 #include <Hash.h>
