@@ -22,8 +22,7 @@
 #undef CONFIG_ESP_COREDUMP_CHECK_BOOT
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
-
-#define FW_VER "1.14.0  "        // Flyball ETS firmware version
+#define FW_VER "1.15.1  "        // Flyball ETS firmware version
 
 #define Simulate false           // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
@@ -38,10 +37,12 @@
 
 #define EEPROM_SIZE 4096         // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096  // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
+#define U_PART U_SPIFFS
 
 #define WS_TICKET_BUFFER_SIZE 8  // Number of websocket tickets kept in memory
 #define WS_TIMEOUT 1800000       // Timeout for secured websocket in miliseconds
 
-#define APP_VER "1.1.0"          // WebUI version
+#define APP_VER "1.1.1"          // WebUI version
+#define YEAR 2024              // Default timestamp year
 
 #endif
