@@ -43,5 +43,6 @@
 #define WS_TIMEOUT 1800000       // Timeout for secured websocket in miliseconds
 
 #define APP_VER "1.1.1"          // WebUI version
+#define YEAR 2024              // Default timestamp year
 
 #endif
