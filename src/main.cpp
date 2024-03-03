@@ -40,7 +40,6 @@ static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 void setup()
 {
-   EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
    SettingsManager.init();
 
