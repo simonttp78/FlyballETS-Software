@@ -944,6 +944,7 @@ void WebHandlerClass::onProgressRequest(AsyncWebServerRequest *request) {
 void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
    if (!index) {
       Serial.println("\nFirmware update initiated.");
+      LCDController.FirmwareUpdateInit();
       content_len = request->contentLength();
       if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH))
          Update.printError(Serial);
@@ -968,7 +969,7 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
 }
 
 void WebHandlerClass::printProgress(size_t prg, size_t sz) {
-  uint16_t iProgressPercentage = (prg * 100) / content_len;
+   uint16_t iProgressPercentage = (prg * 100) / content_len;
       if (uiLastProgress != iProgressPercentage)
       {
          Serial.printf("Progress: %u%%\r", iProgressPercentage);
