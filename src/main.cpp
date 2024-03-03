@@ -140,7 +140,7 @@ void setup()
       log_e("Error initializing softAP!");
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
    // configure webserver
    WebHandler.init(80);
