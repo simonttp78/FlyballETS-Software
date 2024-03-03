@@ -1,6 +1,7 @@
 /* H T M L - S O U R C E C O D E **********************************************/  
 const char ota_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html class="HTML">
+<html lang="en">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -41,12 +42,12 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
 </style>
 </head>
 <title>FIRMWARE UPDATE</title>
-<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'></script>
 </head><body>
 <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
 <input type='file' name='update' id='file' onchange='sub(this)' style=display:none accept=".bin">
-<label id='file-input' for='file'>   Choose file...</label>
-<input type="submit" id="updateBtn" class="btn2" disabled = "disabled" value="Update">
+<label id='file-input' for='file'>   Select file...</label>
+<input type="submit" id="updateBtn" class="btn2" disabled = "disabled" value="Start Update">
 <br><div id='txtUpload'style=display:none;text-align:left>Upload:</div>
 <br><div id='prgbar'style=display:none><div id='bar'></div></div>
 <br><div id='txtUpdate'style=display:none;text-align:left>Update:</div>
@@ -55,7 +56,7 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
 <script>
 function updateOTABar() {
   $.ajax({
-    url: '/getOTAProgress', // Endpoint zum Abrufen des OTA-Fortschritts vom ESP32
+    url: '/getOTAProgress',
     method: 'GET',
     dataType: 'json',
     success: function(data) {
@@ -102,7 +103,7 @@ return xhr;
 },
 success:function(d, s) {
 console.log('success!'); 
-alert("OTA-Update successful - ESP will restart!");
+alert("ETS updated successfuly - restarting system!");
 setTimeout("location.href = '../';", 2000);
 },
 error: function (a, b, c) {
@@ -113,7 +114,7 @@ error: function (a, b, c) {
 
 const char FS_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
-<!-- saved from url=(0031)http://192.168.0.160/filesystem -->
+<!-- saved from url=(0031)http://192.168.20.1/filesystem -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -180,9 +181,9 @@ td:nth-child(2) {column-width: 175px;text-align: left;white-space: nowrap;overfl
 td:nth-child(3) {column-width: 100px;text-align: center;}
 td:nth-child(4) {column-width: 30px; text-align: center;}
 </style>
-<title>File manager</title><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script></head>
+<title>File manager</title><script src='https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'></script></head>
 <body>
-<form method="POST" action="http://192.168.0.160/filesystem#" enctype="multipart/form-data" id="upload_form">
+<form method="POST" action="http://192.168.20.1/filesystem#" enctype="multipart/form-data" id="upload_form">
 <input type="file" name="update" id="file" onchange="sub(this)" style="display:none">
 <label id="file-input" for="file">   Choose file...</label>
 <input type="submit" id="updateBtn" class="btn2" disabled="true" value="Upload file">

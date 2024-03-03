@@ -24,8 +24,7 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o wersji
-   firmware widoczna jest także w stopce interfejsu www/WiFi.
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.14.0"). Od wersji 1.9.0 informacja o wersji firmware widoczna jest także w stopce interfejsu www (WiFi).
 2. Otworzyć stronę z aktualizacjami firmware'u, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
@@ -36,9 +35,9 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
 3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
-5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234). Jeśli okno logowania się nie pojawi, zalogować się najpierw w zakładce "Configuration" i wrócić do zakładki "Firmware update".
-6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Wybierz plik" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
-7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
+5. Kliknąć w pole "Select file...", wskazać pobrany plik z rozszerzeniem ".bin"
+6. Aby rozpocząć aktualizację należy kliknąć przycisk "START UPDATE". Postęp w % będzie widoczny na ekranie LCD.
+7. Po udanej aktualizacji pojawi się okienko "ETS updated successfuly - restarting system!" i ETS zrestartuje się automatycznie. Po zamknięciu okienka system przejdzie na stronę główną. Neleży sprawdzić, czy w stopce jest widoczna nowa wersja oprogramowania.
 
 
 ## Wyświetlacz LCD

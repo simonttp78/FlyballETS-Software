@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - fixed bat default value in WebUI (v1.1.1)
 - migration from ElegantOTA to open source Web OTA update
-- SDK update: PlatfromIO 6.1.13, Espressif32 6.4.0 (6.5.0 has WiFi issue)
+- SDK update: PlatfromIO 6.1.13, Espressif32 6.4.0 (6.5.0 has WiFi and Hardwareserial issue)
 
 
 ## [1.14.0] - 2023-11-28
