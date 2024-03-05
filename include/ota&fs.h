@@ -18,18 +18,18 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
 .btn2:focus {outline: none;}
 .btn2:active {color: white;background-color: #ca7125;}
 .btn2:disabled {cursor: default;background: #DDD;}
-   html {
-     font-family: Roboto, Arial, sans-serif;
-     display: inline-block;
-     margin: 0px auto;
-     text-align: center;
+  html {
+    font-family: Roboto, Arial, sans-serif;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
     }
     h2 { font-size: 3.0rem; 
-       font-family: Arial;
+      font-family: Arial;
       text-align: center;
       font-weight: normal;
       color: #fafcfc;
-     }
+    }
     p { font-size: 3.0rem; margin-top: 0;}
     .units { font-size: 1.2rem; }
     .dht-labels{
@@ -40,6 +40,7 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
       color: #333333;
     }
 </style>
+<html lang="en">
 </head>
 <title>FIRMWARE UPDATE</title>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'></script>
@@ -54,62 +55,62 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
 <br><div id='ota-progress-bar'style=display:none><div id='ota-progress'></div></div>
 </form>
 <script>
-function updateOTABar() {
-  $.ajax({
-    url: '/getOTAProgress',
-    method: 'GET',
-    dataType: 'json',
-    success: function(data) {
-      const otaProgress = data.progress;
-      $('#ota-progress').css('width', otaProgress + '%');
-    }
-  });
-}
-setInterval(updateOTABar, 1000); 
+  function updateOTABar() {
+    $.ajax({
+      url: '/getOTAProgress',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        const otaProgress = data.progress;
+        $('#ota-progress').css('width', otaProgress + '%');
+      }
+    });
+  }
+  setInterval(updateOTABar, 1000); 
 
-function sub(obj){
-var a = obj.value;
-console.log(a);
-var fileName = a.replace(/^.*[\\\/]/, '')
-console.log(fileName);
-document.getElementById('file-input').innerHTML = fileName;
-document.getElementById('updateBtn').disabled = false;
-document.getElementById('prgbar').style.display = 'block';
-document.getElementById('ota-progress-bar').style.display = 'block';
-document.getElementById('txtUpload').style.display = 'block';
-document.getElementById('txtUpdate').style.display = 'block';
-};
-$('form').submit(function(e){
-  document.getElementById('updateBtn').disabled = "disabled"; 
-e.preventDefault();
-var form = $('#upload_form')[0];
-var data = new FormData(form);
-$.ajax({
-url: '/doupdate',
-type: 'POST',
-data: data,
-contentType: false,
-processData:false,
-xhr: function() {
-var xhr = new window.XMLHttpRequest();
-xhr.upload.addEventListener('progress', function(evt) {
-if (evt.lengthComputable) {
-var per = evt.loaded / evt.total;
-$('#prg').html('Progress:');
-$('#bar').css('width',Math.round(per*100) + "%");
-}
-}, false);
-return xhr;
-},
-success:function(d, s) {
-console.log('success!'); 
-alert("ETS updated successfuly - restarting system!");
-setTimeout("location.href = '../';", 2000);
-},
-error: function (a, b, c) {
-}
-});
-});
+  function sub(obj){
+    var a = obj.value;
+    console.log(a);
+    var fileName = a.replace(/^.*[\\\/]/, '')
+    console.log(fileName);
+    document.getElementById('file-input').innerHTML = fileName;
+    document.getElementById('updateBtn').disabled = false;
+    document.getElementById('prgbar').style.display = 'block';
+    document.getElementById('ota-progress-bar').style.display = 'block';
+    document.getElementById('txtUpload').style.display = 'block';
+    document.getElementById('txtUpdate').style.display = 'block';
+  };
+  $('form').submit(function(e){
+    document.getElementById('updateBtn').disabled = "disabled"; 
+    e.preventDefault();
+    var form = $('#upload_form')[0];
+    var data = new FormData(form);
+    $.ajax({
+      url: '/doupdate',
+      type: 'POST',
+      data: data,
+      contentType: false,
+      processData:false,
+      xhr: function() {
+        var xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function(evt) {
+          if (evt.lengthComputable) {
+            var per = evt.loaded / evt.total;
+            $('#prg').html('Progress:');
+            $('#bar').css('width',Math.round(per*100) + "%");
+          }
+        }, false);
+      return xhr;
+      },
+      success:function(d, s) {
+        console.log('success!'); 
+        alert("ETS updated successfuly - restarting system!");
+        setTimeout("location.href = '../';", 2000);
+      },
+      error: function (a, b, c) {
+      }
+    });
+  });
 </script></body></html>)rawliteral";
 
 const char FS_html[] PROGMEM = R"rawliteral(
@@ -142,35 +143,35 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
   font-size: 14px;
   margin: 2px 2px;
   cursor: pointer;
-   border-radius: 4px;
-   background-color: #e03423db;
-   transition-duration: 0.1s;
-  }
+  border-radius: 4px;
+  background-color: #e03423db;
+  transition-duration: 0.1s;
+}
 .btndel:hover {background-color: #b02f19;}
 .btndel:visited {color: white;}
 .btndel:active {color: white;background-color: #db331d;}
 
-   html {
-     font-family: Roboto, Arial, sans-serif;
-     display: inline-block;
-     margin: 0px auto;
-     text-align: center;
-    }
-    h2 { font-size: 3.0rem; 
-       font-family: Arial;
-      text-align: center;
-      font-weight: normal;
-      color: #fafcfc;
-    }
-    p { font-size: 3.0rem; margin-top: 0;}
-    .units { font-size: 1.2rem; }
-    .dht-labels{
-      font-size: 1.5rem;
-      vertical-align:middle;
-      padding-bottom: 15px;
-      font-weight: normal;
-      color: #333333;
-    }
+html {
+  font-family: Roboto, Arial, sans-serif;
+  display: inline-block;
+  margin: 0px auto;
+  text-align: center;
+}
+h2 { font-size: 3.0rem; 
+  font-family: Arial;
+  text-align: center;
+  font-weight: normal;
+  color: #fafcfc;
+}
+p { font-size: 3.0rem; margin-top: 0;}
+.units { font-size: 1.2rem; }
+.dht-labels{
+  font-size: 1.5rem;
+  vertical-align:middle;
+  padding-bottom: 15px;
+  font-weight: normal;
+  color: #333333;
+}
 a {color: #ffffff;}
 table,th, td{font-family: arial;border-collapse: collapse;border: 1px solid #dddddd;}
 th, td {padding: 10px; }
@@ -193,63 +194,63 @@ td:nth-child(4) {column-width: 30px; text-align: center;}
 <br>
 <div id="prg" style="display:none">Ready to upload</div>
 <br><div id="prgbar" style="display:none"><div id="bar"></div></div></form>
-<script>
 
-function deletef(h) {
-   var xhr = new XMLHttpRequest();
-   var fnstring=String("/delete?file=")+h;
-   xhr.open("GET", fnstring, true);
-   console.log(fnstring);
+<script>
+  function deletef(h) {
+    var xhr = new XMLHttpRequest();
+    var fnstring=String("/delete?file=")+h;
+    xhr.open("GET", fnstring, true);
+    console.log(fnstring);
     xhr.send();
     setTimeout("location.href = '../filesystem';", 3000);
-}
+  }
 
-function sub(obj){
-  var a = obj.value;
-  console.log(a);
-  var fileName = a.replace(/^.*[\\\/]/, '');
-  console.log(fileName);
-  document.getElementById('file-input').innerHTML = fileName;
-  document.getElementById('updateBtn').disabled = false;
-  document.getElementById('prgbar').style.display = 'block';
-  document.getElementById('prg').style.display = 'block';
-};
+  function sub(obj){
+    var a = obj.value;
+    console.log(a);
+    var fileName = a.replace(/^.*[\\\/]/, '');
+    console.log(fileName);
+    document.getElementById('file-input').innerHTML = fileName;
+    document.getElementById('updateBtn').disabled = false;
+    document.getElementById('prgbar').style.display = 'block';
+    document.getElementById('prg').style.display = 'block';
+  };
 
-$('form').submit(function(e){
-document.getElementById('updateBtn').disabled = "disabled";  
-e.preventDefault();
-var form = $('#upload_form')[0];
-var data = new FormData(form);
+  $('form').submit(function(e){
+    document.getElementById('updateBtn').disabled = "disabled";  
+    e.preventDefault();
+    var form = $('#upload_form')[0];
+    var data = new FormData(form);
 
-$.ajax({
-url: '/doUpload',
-type: 'POST',
-data: data,
-contentType: false,
-processData:false,
-xhr: function() {
-var xhr = new window.XMLHttpRequest();
-xhr.upload.addEventListener('progress', function(evt) {
-if (evt.lengthComputable) {
-var per = evt.loaded / evt.total;
-$('#prg').html('Progress: ' + Math.round(per*100));
-$('#bar').css('width', Math.round(per*350)+"px");
-}
-}, false);
-return xhr;
-},
-success:function(d, s) {
-console.log('success!'); 
-setTimeout("location.href = '../filesystem';", 3000);
-document.getElementById('prgbar').style.display = 'none';
-document.getElementById('prg').style.display = 'none';
-$('#prg').html('Ready to upload');
-$('#bar').css('width:0px');
-document.getElementById('file-input').innerHTML = 'Choose file...';
-document.getElementById('updateBtn').disabled = true;
-},
-error: function (a, b, c) {alert("Upload error");setTimeout("location.href = '../filesystem';", 1000);}
-});
-});
+    $.ajax({
+      url: '/doUpload',
+      type: 'POST',
+      data: data,
+      contentType: false,
+      processData:false,
+      xhr: function() {
+        var xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function(evt) {
+          if (evt.lengthComputable) {
+            var per = evt.loaded / evt.total;
+            $('#prg').html('Progress: ' + Math.round(per*100));
+            $('#bar').css('width', Math.round(per*350)+"px");
+          }
+        }, false);
+        return xhr;
+      },
+      success:function(d, s) {
+        console.log('success!'); 
+        setTimeout("location.href = '../filesystem';", 3000);
+        document.getElementById('prgbar').style.display = 'none';
+        document.getElementById('prg').style.display = 'none';
+        $('#prg').html('Ready to upload');
+        $('#bar').css('width:0px');
+        document.getElementById('file-input').innerHTML = 'Select file...';
+        document.getElementById('updateBtn').disabled = true;
+      },
+      error: function (a, b, c) {alert("Upload error");setTimeout("location.href = '../filesystem';", 1000);}
+    });
+  });
 </script></body></html>   
 )rawliteral";

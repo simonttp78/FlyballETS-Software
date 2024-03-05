@@ -39,52 +39,32 @@ void WebHandlerClass::init(int webPort)
    // Favicon handler
    _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
 
-   /*// ElegantOTA
-   String password = SettingsManager.getSetting("AdminPass");
-   char httpPassword[password.length() + 1];
-   password.toCharArray(httpPassword, password.length() + 1);
-   ElegantOTA.begin(_server, "Admin", httpPassword);
-   ElegantOTA.onStart([]() {
-      Serial.println("\n""Firmware update via WebUI initiated.");
-      LCDController.FirmwareUpdateInit(); });
-   ElegantOTA.onProgress([](size_t current, size_t final) {
-      uint16_t iProgressPercentage = (current * 100) / final;
-      if (WebHandler.uiLastProgress != iProgressPercentage)
-      {
-         Serial.printf("Progress: %u%%\r", iProgressPercentage);
-         String sProgressPercentage = String(iProgressPercentage);
-         while (sProgressPercentage.length() < 3)
-            sProgressPercentage = " " + sProgressPercentage;
-         LCDController.FirmwareUpdateProgress(sProgressPercentage);
-         WebHandler.uiLastProgress = iProgressPercentage;
-      } });
-   ElegantOTA.onEnd([](bool success) {
-      if (success)
-      {
-         Serial.println("\nUpdate via WebUI completed.\r\n");
-         LCDController.FirmwareUpdateSuccess();
-      }
-      else
-         Serial.println("Update via WebUI failed.");
-      });*/
+   // OTA update
+   _server->on("/update", HTTP_GET, [](AsyncWebServerRequest *request)
+               { request->send_P(200, "text/html", ota_html); });
 
-   _server->on("/update", HTTP_GET, [](AsyncWebServerRequest * request) {
-      request->send_P(200, "text/html", ota_html);
-   });
-
-   _server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest * request) {
+   _server->on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request)
+               {
       request->send(200, "text/plain", "Device will reboot in 2 seconds");
       delay(2000);
-      ESP.restart();
-   });
+      ESP.restart(); });
 
-   _server->on("/doupdate", HTTP_POST,
-   [](AsyncWebServerRequest * request) {},
-   [](AsyncWebServerRequest * request, const String & filename, size_t index, uint8_t *data, size_t len, bool final) {
-   WebHandler.handleDoUpdate(request, filename, index, data, len, final);
-   });
+   _server->on(
+       "/doupdate", HTTP_POST,
+       [](AsyncWebServerRequest *request) {},
+       [](AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final)
+       {
+          WebHandler.handleDoUpdate(request, filename, index, data, len, final);
+       });
 
    _server->on("/getOTAProgress", HTTP_GET, std::bind(&WebHandlerClass::onProgressRequest, this, std::placeholders::_1));
+
+   SDcardController.listDir(SD_MMC, "/", 0);
+
+   _server->on("/filesystem", HTTP_GET, std::bind(&WebHandlerClass::onFilesystem, this, std::placeholders::_1));
+
+   _server->on("/filelist", HTTP_GET, [](AsyncWebServerRequest *request)
+               { request->send_P(200, "text/plain", SDcardController.filelist.c_str()); });
 
    _server->begin();
    Update.onProgress([this](size_t prg, size_t sz) -> void { printProgress(prg, sz); });
@@ -109,7 +89,7 @@ void WebHandlerClass::loop()
    unsigned long lCurrentUpTime = millis();
    if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
       bSendRaceData = true;
-   //log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (bUpdateLights)
@@ -130,8 +110,6 @@ void WebHandlerClass::loop()
          }
       }
    }
-   //if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-      //ElegantOTA.loop();
 }
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -304,7 +282,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       _lLastBroadcast = millis();
       if (std::move(buffer))
       {
-         serializeJson(jsonResponseDoc, (char *)buffer->data(),len);
+         serializeJson(jsonResponseDoc, (char *)buffer->data(), len);
          // log_d("wsBuffer to send: %s", (char *)wsBuffer->get());
          client->text(std::move(buffer));
       }
@@ -487,7 +465,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
-   //log_d("Getting Lights state");
+   // log_d("Getting Lights state");
    JsonDocument jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 
@@ -497,12 +475,12 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
    size_t len = measureJson(jsonLightsDoc);
    std::shared_ptr<std::vector<uint8_t>> buffer;
    buffer = std::make_shared<std::vector<uint8_t>>(len);
-   
+
    if (std::move(buffer))
    {
-      serializeJson(jsonLightsDoc, (char *)buffer->data(),len);
-      //serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
+      serializeJson(jsonLightsDoc, (char *)buffer->data(), len);
+      // serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
+      //  log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
@@ -619,7 +597,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       buffer = std::make_shared<std::vector<uint8_t>>(len);
       if (std::move(buffer))
       {
-         serializeJson(JsonRaceDataDoc, (char *)buffer->data(),len);
+         serializeJson(JsonRaceDataDoc, (char *)buffer->data(), len);
          // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
          if (iClientId == -1)
          {
@@ -761,7 +739,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       buffer = std::make_shared<std::vector<uint8_t>>(len);
       if (std::move(buffer))
       {
-         serializeJson(JsonSystemDataDoc, (char *)buffer->data(),len);
+         serializeJson(JsonSystemDataDoc, (char *)buffer->data(), len);
          if (iClientId == -1)
          {
             _ws->textAll(std::move(buffer));
@@ -936,13 +914,23 @@ void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
    }
 }
 
-void WebHandlerClass::onProgressRequest(AsyncWebServerRequest *request) {
-  String progressJson = "{\"progress\":" + String(otaProgress) + "}";
-  request->send(200, "application/json", progressJson);
+void WebHandlerClass::onProgressRequest(AsyncWebServerRequest *request)
+{
+   String progressJson = "{\"progress\":" + String(otaProgress) + "}";
+   request->send(200, "application/json", progressJson);
 }
 
-void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final) {
-   if (!index) {
+void WebHandlerClass::onFilesystem(AsyncWebServerRequest *request)
+{
+   String responseHTML = String(FS_html);
+   responseHTML.replace("%list%", SDcardController.filelist);
+   request->send(200, "text/html", responseHTML);
+}
+
+void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+   if (!index)
+   {
       Serial.println("\nFirmware update initiated.");
       LCDController.FirmwareUpdateInit();
       content_len = request->contentLength();
@@ -953,14 +941,18 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
    if (Update.write(data, len) != len)
       Update.printError(Serial);
 
-   if (final) {
+   if (final)
+   {
       AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Ok");
       response->addHeader("Refresh", "30");
       response->addHeader("Location", "/update");
       request->send(response);
-      if (!Update.end(true)) {
+      if (!Update.end(true))
+      {
          Update.printError(Serial);
-      } else {
+      }
+      else
+      {
          Serial.println("\nUpdate completed.\r\n");
          Serial.flush();
          ESP.restart();
@@ -968,17 +960,18 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
    }
 }
 
-void WebHandlerClass::printProgress(size_t prg, size_t sz) {
+void WebHandlerClass::printProgress(size_t prg, size_t sz)
+{
    uint16_t iProgressPercentage = (prg * 100) / content_len;
-      if (uiLastProgress != iProgressPercentage)
-      {
-         Serial.printf("Progress: %u%%\r", iProgressPercentage);
-         String sProgressPercentage = String(iProgressPercentage);
-         while (sProgressPercentage.length() < 3)
-            sProgressPercentage = " " + sProgressPercentage;
-         LCDController.FirmwareUpdateProgress(sProgressPercentage);
-         uiLastProgress = iProgressPercentage;
-      }
+   if (uiLastProgress != iProgressPercentage)
+   {
+      Serial.printf("Progress: %u%%\r", iProgressPercentage);
+      String sProgressPercentage = String(iProgressPercentage);
+      while (sProgressPercentage.length() < 3)
+         sProgressPercentage = " " + sProgressPercentage;
+      LCDController.FirmwareUpdateProgress(sProgressPercentage);
+      uiLastProgress = iProgressPercentage;
+   }
 }
 
 WebHandlerClass WebHandler;

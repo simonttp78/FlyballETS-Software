@@ -50,6 +50,7 @@ protected:
    void _onFavicon(AsyncWebServerRequest *request);
    void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
    void onProgressRequest(AsyncWebServerRequest *request);
+   void onFilesystem(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
    const uint16_t _iRaceDataBroadcastInterval = 750;
