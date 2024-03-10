@@ -26,7 +26,7 @@ private:
       long long llSimTriggerTime;
       uint8_t iSimState;
    } SimulatorRecord;
-   static const SimulatorRecord SimulatorQueue[60 * NumSimulatedRaces] PROGMEM;
+   static const SimulatorRecord SimulatorQueue[TRIGGER_QUEUE_LENGTH * NumSimulatedRaces] PROGMEM;
 
    SimulatorRecord PendingRecord;
 };
