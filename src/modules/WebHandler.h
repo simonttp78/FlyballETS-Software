@@ -57,7 +57,7 @@ protected:
    unsigned long _lLastSystemDataBroadcast;
    const uint16_t _iSystemDataBroadcastInterval = 3500;
    unsigned long _lLastPingBroadcast;
-   const uint16_t _iPingBroadcastInterval = 30000;
+   const uint16_t _iPingBroadcastInterval = 60000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
    char _last_modified[50];

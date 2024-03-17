@@ -5,12 +5,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Changed
+
+
+## [1.16.0] - 2023-03-18
+
+### Added
+- testETS.py v1.1.2 support for second Command (in not nice way, but works)
+- testcase TC52 with avoiding entering dog fault when previous dog comingback outside the gate
 
 ### Changed
-- fixed bat default value in WebUI (v1.1.1)
+- fixed Battery default value in WebUI (v1.1.1)
 - migration from ElegantOTA to open source Web OTA update
 - SDK update: PlatfromIO 6.1.13, Espressif32 6.4.0 (6.5.0 has WiFi and Hardwareserial issue)
-
+- fix for WebIF dog time refresh after negative cross re-calculation
+- battery percentage fix (constant 100% displayed) (bug injected in v1.14.0)
+- migration to ArduinoJson 7
 
 ## [1.14.0] - 2023-11-28
 

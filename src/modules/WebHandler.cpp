@@ -59,8 +59,6 @@ void WebHandlerClass::init(int webPort)
 
    _server->on("/getOTAProgress", HTTP_GET, std::bind(&WebHandlerClass::onProgressRequest, this, std::placeholders::_1));
 
-   SDcardController.listDir(SD_MMC, "/", 0);
-
    _server->on("/filesystem", HTTP_GET, std::bind(&WebHandlerClass::onFilesystem, this, std::placeholders::_1));
 
    _server->on("/filelist", HTTP_GET, [](AsyncWebServerRequest *request)

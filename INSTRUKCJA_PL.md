@@ -33,11 +33,13 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Safari też działa, za wyjątkiem paska postępu (trzeba cierpliwie czekać).
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
-3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
+3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
-5. Kliknąć w pole "Select file...", wskazać pobrany plik z rozszerzeniem ".bin"
-6. Aby rozpocząć aktualizację należy kliknąć przycisk "START UPDATE". Postęp w % będzie widoczny na ekranie LCD.
-7. Po udanej aktualizacji pojawi się okienko "ETS updated successfuly - restarting system!" i ETS zrestartuje się automatycznie. Po zamknięciu okienka system przejdzie na stronę główną. Neleży sprawdzić, czy w stopce jest widoczna nowa wersja oprogramowania.
+5. Opcjonalnie (zależy od wersji oprogramowania) zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
+6. Kliknąć w pole "Select file..." ("Wybierz plik") i wskazać pobrany plik z rozszerzeniem ".bin"
+7. Jeśli aktualizacja nie rozpocznie się automatycznie, należy kliknąć przycisk "START UPDATE". Postęp w % będzie widoczny na ekranie LCD.
+8. Po udanej aktualizacji pojawi się okienko "OTA Success" lub "ETS updated successfuly - restarting system!" i ETS zrestartuje się automatycznie.
+9. Po restarcie upewnić się, czy w stopce WebUI (lub w trakcie uruchamiania na LCD) jest widoczna nowa wersja oprogramowania.
 
 
 ## Wyświetlacz LCD
