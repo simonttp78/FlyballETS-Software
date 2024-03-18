@@ -8,11 +8,12 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 
-## [1.16.0] - 2023-03-18
+## [1.15.5] - 2023-03-19
 
 ### Added
 - testETS.py v1.1.2 support for second Command (in not nice way, but works)
 - testcase TC52 with avoiding entering dog fault when previous dog comingback outside the gate
+- storing manual faults timestamps to SD card sensors folder
 
 ### Changed
 - fixed Battery default value in WebUI (v1.1.1)
@@ -242,7 +243,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...HEAD
+[1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0
 [1.11.10]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...v1.11.10
