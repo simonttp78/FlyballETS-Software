@@ -134,6 +134,7 @@ private:
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
+   std::string _strManualFaultsRecords = "$commands;";
 
    enum _byDogStates
    {

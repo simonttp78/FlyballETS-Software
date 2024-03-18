@@ -54,8 +54,8 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    LCDController.bUpdateTimerLCDdata = true;
    LCDController.bExecuteLCDUpdate = true;
 #ifdef WiFiON
-    WebHandler.bUpdateRaceData = true;
-    WebHandler.bSendRaceData = true;
+   WebHandler.bUpdateRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 
@@ -394,12 +394,12 @@ void RaceHandlerClass::Main()
             {
                _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
                if (_bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]])
-                  {
-                     SetDogFault(iCurrentDog, ON);
-                     _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
-                     log_d("Previous dog didn't missed the gate, so dog %i fault has been re-activated.", iCurrentDog + 1);
-                  }
-            }   
+               {
+                  SetDogFault(iCurrentDog, ON);
+                  _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+                  log_d("Previous dog didn't missed the gate, so dog %i fault has been re-activated.", iCurrentDog + 1);
+               }
+            }
             // If current dog has no fault it has to be invisible dog coming back and it's next dog who did negative cross
             if (!_bDogFaults[iCurrentDog])
             {
@@ -1028,6 +1028,7 @@ void RaceHandlerClass::ResetRace()
          _sCurrentRaceId = " " + _sCurrentRaceId;
       LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
       LCDController.bUpdateTimerLCDdata = true;
+      _strManualFaultsRecords = "$commands;";
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -1050,7 +1051,10 @@ void RaceHandlerClass::_PrintRaceSummary()
    log_i(" Team: %s", GetRaceTime());
    log_i("   CT: %s", GetCleanTime());
    if (SDcardController.bSDCardDetected)
+   {
       SDcardController.SaveRaceDataToFile();
+      //_PrintRaceTriggerRecordsToFile();
+   }
 #if !Simulate
    if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
       _PrintRaceTriggerRecords();
@@ -1100,10 +1104,12 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
       rawSensorsReadingFile.print(iNumberOfRacingDogs);
       rawSensorsReadingFile.print(";reruns ");
       if (bRerunsOff)
-         rawSensorsReadingFile.print("on");
-      else
          rawSensorsReadingFile.print("off");
+      else
+         rawSensorsReadingFile.print("on");
       rawSensorsReadingFile.println(";");
+      if (_strManualFaultsRecords.length() > 10)
+         rawSensorsReadingFile.println(_strManualFaultsRecords.c_str());
       while (iRecordToPrintIndex < _iInputQueueWriteIndex)
       {
          STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
@@ -1142,15 +1148,26 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       bFault = !_bDogManualFaults[iDogNumber];
       _bDogManualFaults[iDogNumber] = bFault;
+      long long llManualFaultTimestamp = MICROS - llRaceStartTime;
       if (bFault)
       {
          _bDogDetectedManualFaults[iDogNumber][iDogRunCounters[iDogNumber]] = true;
-         log_i("Manual change of dog %i fault to ON afer %lld ms.", iDogNumber + 1, (MICROS - llRaceStartTime) / 1000);
+         log_i("Manual change of dog %i fault to ON afer %lld ms.", iDogNumber + 1, llManualFaultTimestamp / 1000);
+         double dManualFaultTime = ((long long)(llManualFaultTimestamp + 50000) / 100000) / 10.0;
+         std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
+         strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
+         _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
+         //log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
       }
       else
       {
          _bDogDetectedManualFaults[iDogNumber][iDogRunCounters[iDogNumber]] = false;
          log_i("Manual change of dog %i fault to OFF.", iDogNumber + 1);
+         double dManualFaultTime = ((long long)(llManualFaultTimestamp + 50000) / 100000) / 10.0;
+         std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
+         strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
+         _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
+         //log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
       }
    }
    else if (State == ON) // only autodetected faults are handled by this
