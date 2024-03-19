@@ -40,7 +40,6 @@ static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 void setup()
 {
-   EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
    SettingsManager.init();
 
@@ -141,45 +140,10 @@ void setup()
       log_e("Error initializing softAP!");
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
    // configure webserver
    WebHandler.init(80);
-
-   // OTA setup
-   ArduinoOTA.setPassword(strAPPass.c_str());
-   ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([](){
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-         type = "Firmware";
-      else // U_SPIFFS
-         type = "Filesystem";
-      Serial.println("\n" + type + " update initiated.");
-      LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([](){ 
-      Serial.println("\nUpdate completed.\r\n");
-      LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
-      uint16_t iProgressPercentage = (progress / (total / 100));
-      if (uiLastProgress != iProgressPercentage)
-      {
-         Serial.printf("Progress: %u%%\r", iProgressPercentage);
-         String sProgressPercentage = String(iProgressPercentage);
-         while (sProgressPercentage.length() < 3)
-            sProgressPercentage = " " + sProgressPercentage;
-         LCDController.FirmwareUpdateProgress(sProgressPercentage);
-         uiLastProgress = iProgressPercentage;
-      } });
-   ArduinoOTA.onError([](ota_error_t error){
-      Serial.printf("Error[%u]: ", error);
-      LCDController.FirmwareUpdateError();
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
-   ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
    // log_i("Setup running on core %d", xPortGetCoreID());
@@ -198,16 +162,6 @@ void loop()
       // Handle settings manager loop
       SettingsManager.loop();
 
-#ifdef WiFiON
-      // Handle OTA update if incoming
-      ArduinoOTA.handle();
-      /*if (bCheckWsClinetStatus)
-      {
-         bCheckWsClinetStatus = false;
-         log_i("IP to check: %s", ipTocheck.toString().c_str());
-         WebHandler.disconnectWsClient(ipTocheck);
-      }*/
-#endif
 
       // Handle GPS
       GPSHandler.loop();
@@ -375,9 +329,13 @@ void ToggleWifi()
 
 void mdnsServerSetup()
 {
+   if (!MDNS.begin("flyballets")) {
+      Serial.println("Error setting up MDNS responder!");
+      return;
+   }
+   log_i("mDNS responder started");
    MDNS.addService("http", "tcp", 80);
-   MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
-   MDNS.begin("flyballets");
+   //MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
 }
 #endif
 

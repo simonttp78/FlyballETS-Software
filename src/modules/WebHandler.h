@@ -3,13 +3,14 @@
 #define _WEBHANDLER_h
 
 #include "config.h"
-#include "global.h"
 #include "Arduino.h"
 #include "SettingsManager.h"
 #include <Hash.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include "LCDController.h"
 #include <ESPAsyncWebServer.h>
+#include <Update.h>
 #include "SDcardController.h"
 #include <ArduinoJson.h>
 #include "RaceHandler.h"
@@ -21,6 +22,7 @@
 #include <rom/rtc.h>
 #ifndef WebUIonSDcard
 #include "index.html.gz.h"
+#include "ota&fs.h"
 #endif
 
 class WebHandlerClass
@@ -46,13 +48,16 @@ protected:
    bool _wsAuth(AsyncWebSocketClient *client);
    void _onHome(AsyncWebServerRequest *request);
    void _onFavicon(AsyncWebServerRequest *request);
+   void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+   void onProgressRequest(AsyncWebServerRequest *request);
+   void onFilesystem(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
    const uint16_t _iRaceDataBroadcastInterval = 750;
    unsigned long _lLastSystemDataBroadcast;
    const uint16_t _iSystemDataBroadcastInterval = 3500;
    unsigned long _lLastPingBroadcast;
-   const uint16_t _iPingBroadcastInterval = 30000;
+   const uint16_t _iPingBroadcastInterval = 60000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
    char _last_modified[50];
@@ -71,6 +76,7 @@ public:
    void init(int webPort);
    void loop();
    void disconnectWsClient(IPAddress ipDisconnectedIP);
+   void printProgress(size_t prg, size_t sz);
    bool bUpdateLights = false;
    bool bSendRaceData = false;
    bool bUpdateRaceData = false;
@@ -100,6 +106,8 @@ public:
 private:
    uint16_t _iPwrOnTag;
    String _strRunDirection;
+   size_t content_len;             
+   int otaProgress = 0;
 };
 
 extern WebHandlerClass WebHandler;

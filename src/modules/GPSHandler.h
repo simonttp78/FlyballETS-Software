@@ -14,7 +14,6 @@ private:
    bool _bGSPconnected = false;
 
 protected:
-   HardwareSerial *_SerialPort;
    TinyGPSPlus _Tgps;
    void _HandleSerialPort();
    void _FormatTime();

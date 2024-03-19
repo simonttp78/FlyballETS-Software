@@ -117,6 +117,7 @@ private:
    bool _bDogFakeTime[4][4];
    bool _bDogMissedGateGoingin[4][4];
    bool _bDogMissedGateComingback[4][4];
+   bool _bDogFaultOffAsPreviousDogMissedGateAssumed[5][4];
    bool _bRerunBusy;
    bool _bS1isSafe;
    bool _bS1StillSafe;
@@ -133,6 +134,7 @@ private:
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
+   std::string _strManualFaultsRecords = "$commands;";
 
    enum _byDogStates
    {

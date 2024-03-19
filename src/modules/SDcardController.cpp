@@ -73,7 +73,8 @@ void SDcardControllerClass::init()
          {
             createDir(SD_MMC, "/SENSORS_DATA");
          }
-         // listDir(SD_MMC, "/", 1);
+         listDir(SD_MMC, "/", 1);
+         vTaskDelay(200);
 
          // Check last tag value and increase it by one or create new tag.txt file with initial value 1
          File tagfile = SD_MMC.open("/tag.txt");
@@ -233,8 +234,9 @@ void SDcardControllerClass::ToggleDecimalSeparator()
 /// </summary>
 void SDcardControllerClass::listDir(fs::FS &fs, const char *dirname, uint8_t levels)
 {
+   int i = 0;
+   String partlist;
    log_i("Listing directory: %s", dirname);
-
    File root = fs.open(dirname);
    if (!root)
    {
@@ -265,9 +267,14 @@ void SDcardControllerClass::listDir(fs::FS &fs, const char *dirname, uint8_t lev
          Serial.print(file.name());
          Serial.print("  SIZE: ");
          Serial.println(file.size());
+         i++;
+         String st_after_symb = String(file.name()).substring(String(file.name()).indexOf("/") + 1);
+         partlist +=  String("<tr><td>") + String(i) + String("</td><td>") + String("<a href='") + String(file.name()) + String("'>") + st_after_symb + String("</td><td>") + String(file.size() / 1024) + String("</td><td>") + String("<input type='button' class='btndel' onclick=\"deletef('") + String(file.name()) + String("')\" value='X'>") + String("</td></tr>");
+         filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
       }
       file = root.openNextFile();
    }
+   filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
 }
 
 void SDcardControllerClass::createDir(fs::FS &fs, const char *path)

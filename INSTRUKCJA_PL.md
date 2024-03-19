@@ -24,7 +24,7 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o wersji firmware widoczna jest także w stopce interfejsu www/WiFi.
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.14.0"). Od wersji 1.9.0 informacja o wersji firmware widoczna jest także w stopce interfejsu www (WiFi).
 2. Otworzyć stronę z aktualizacjami firmware'u, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
@@ -33,11 +33,13 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Safari też działa, za wyjątkiem paska postępu (trzeba cierpliwie czekać).
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
-3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
+3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
-5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234). Jeśli okno logowania się nie pojawi, to wrócić do poprzedniego widoku, zalogować się najpierw w zakładce "Configuration" a następnie wrócić do zakładki "Firmware update".
-6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Select File" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
-7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
+5. Opcjonalnie (zależy od wersji oprogramowania) zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
+6. Kliknąć w pole "Select file..." ("Wybierz plik") i wskazać pobrany plik z rozszerzeniem ".bin"
+7. Jeśli aktualizacja nie rozpocznie się automatycznie, należy kliknąć przycisk "START UPDATE". Postęp w % będzie widoczny na ekranie LCD.
+8. Po udanej aktualizacji pojawi się okienko "OTA Success" lub "ETS updated successfuly - restarting system!" i ETS zrestartuje się automatycznie.
+9. Po restarcie upewnić się, czy w stopce WebUI (lub w trakcie uruchamiania na LCD) jest widoczna nowa wersja oprogramowania.
 
 
 ## Wyświetlacz LCD

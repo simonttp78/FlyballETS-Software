@@ -46,6 +46,7 @@ public:
     void CheckSDcardSlot(uint8_t iSDdetectPin);
     void SaveRaceDataToFile();
     void ToggleDecimalSeparator();
+    String filelist = "";
 
 private:
     uint8_t _iSDdetectPinStatus;

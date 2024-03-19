@@ -133,7 +133,7 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 12250 || _iBatteryVoltage < 60000)
+   else if (_iBatteryVoltage > 12250 && _iBatteryVoltage < 60000)
    {
       return 100;
    }
