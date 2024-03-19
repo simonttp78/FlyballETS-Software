@@ -40,7 +40,15 @@
             </a>  
          </li>
          <li class="nav-item">
-            <a class="nav-link" href="/update">Firmware update</a>  
+            <a class="nav-link" href="/update">Firmware update</a>
+            <!--<a class="nav-link"
+               [routerLink]="['update']"
+               (click)="navbarCollapsed = true"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{exact: true}"
+               ariaCurrentWhenActive="page">
+               FW Update
+            </a> -->
          </li> 
       </ul>
    </div>

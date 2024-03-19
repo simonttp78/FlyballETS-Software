@@ -10,6 +10,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { HomeComponent } from './components/home/home.component';
 import { RacedisplayComponent } from './components/racedisplay/racedisplay.component';
 import { ConfigComponent } from './components/config/config.component';
+import { UpdateComponent } from './components/update/update.component';
 import { SystemDataComponent } from './components/system-data/system-data.component';
 import { LightsComponent } from './components/racedisplay/lights/lights.component';
 import { EtsdataService } from './services/etsdata.service';
@@ -27,7 +28,8 @@ import { DogDetailsComponent } from './components/racedisplay/dog-details/dog-de
 const appRoutes: Routes = [
   { path: "", component: RacedisplayComponent },
   { path: "racedisplay", component: RacedisplayComponent },
-  { path: "config", component: ConfigComponent }
+  { path: "config", component: ConfigComponent },
+  { path: "update", component: UpdateComponent }
 ];
 
 @NgModule({
@@ -37,6 +39,7 @@ const appRoutes: Routes = [
     HomeComponent,
     RacedisplayComponent,
     ConfigComponent,
+    UpdateComponent,
     SystemDataComponent,
     LightsComponent,
     LoginComponent,
