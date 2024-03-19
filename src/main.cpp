@@ -156,33 +156,41 @@ void setup()
 
 void loop()
 {
-   // Exclude handling of those services in loop while race is running
-   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+   if (!WebHandler.bFwUpdateInProgress)
    {
-      // Handle settings manager loop
-      SettingsManager.loop();
+      // Exclude handling of those services in loop while race is running
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         // Handle settings manager loop
+         SettingsManager.loop();
 
 
-      // Handle GPS
-      GPSHandler.loop();
+         // Handle GPS
+         GPSHandler.loop();
 
-      // Handle battery sensor main processing
-      BatterySensor.CheckBatteryVoltage();
+         // Handle battery sensor main processing
+         BatterySensor.CheckBatteryVoltage();
 
-      // Check SD card slot (card inserted / removed)
-      SDcardController.CheckSDcardSlot(iSDdetectPin);
+         // Check SD card slot (card inserted / removed)
+         SDcardController.CheckSDcardSlot(iSDdetectPin);
+      }
+
+      // Check for serial events
+      serialEvent();
+      // Handle serial console commands
+
+      if (bSerialStringComplete)
+         HandleSerialCommands();
+
+      // Handle remote control and buttons states
+      HandleRemoteAndButtons();
    }
-
-   // Check for serial events
-   serialEvent();
-   // Handle serial console commands
-
-   if (bSerialStringComplete)
-      HandleSerialCommands();
-
-   // Handle remote control and buttons states
-   HandleRemoteAndButtons();
-
+   else
+   {
+      vTaskSuspend(taskRace);
+      vTaskSuspend(taskLights);
+   }
+   
    // Handle LCD processing
    LCDController.Main();
 
@@ -647,3 +655,4 @@ void Core1Lights(void *parameter)
       vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }*/
+

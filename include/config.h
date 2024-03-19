@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 
-#ifndef GLOBALVAR_H
-#define GLOBALVAR_H
+#ifndef GLOBALCONST_H
+#define GLOBALCONST_H
 
 #define MICROS esp_timer_get_time()
 
@@ -22,7 +22,7 @@
 #undef CONFIG_ESP_COREDUMP_CHECK_BOOT
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
-#define FW_VER "1.15.5  "        // Flyball ETS firmware version
+#define FW_VER "1.15.6  "        // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"

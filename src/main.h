@@ -1,8 +1,8 @@
 #include "Arduino.h"
 
 // Includes
-#include <Structs.h>
-#include <config.h>
+#include "Structs.h"
+#include "config.h"
 
 // Public libs
 #include <LiquidCrystal.h>

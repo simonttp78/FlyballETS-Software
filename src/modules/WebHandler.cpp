@@ -930,6 +930,7 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
    if (!index)
    {
       Serial.println("\nFirmware update initiated.");
+      bFwUpdateInProgress = true;
       LCDController.FirmwareUpdateInit();
       content_len = request->contentLength();
       if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH))
@@ -947,12 +948,19 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
       request->send(response);
       if (!Update.end(true))
       {
+         LCDController.FirmwareUpdateError();
+         bFwUpdateInProgress = false;
          Update.printError(Serial);
+         vTaskDelay(2000);
+         ESP.restart();
       }
       else
       {
+         LCDController.FirmwareUpdateSuccess();
+         bFwUpdateInProgress = false;
          Serial.println("\nUpdate completed.\r\n");
          Serial.flush();
+         vTaskDelay(2000);
          ESP.restart();
       }
    }

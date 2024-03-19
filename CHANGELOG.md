@@ -6,13 +6,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
-
+- restored LCD info about FW update result (successful or ERROR)
+- suspend Light and Race processing during FW update
 
 ## [1.15.5] - 2023-03-19
 
 ### Added
 - testETS.py v1.1.2 support for second Command (in not nice way, but works)
-- testcase TC52 with avoiding entering dog fault when previous dog comingback outside the gate
+- testcase TC52 with avoiding entering dog fault when previous dog coming back outside the gate
 - storing manual faults timestamps to SD card sensors folder
 
 ### Changed
@@ -105,24 +106,24 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - WebUI main Race and Configuration pages updated (with support from MiKoKappa)
-- Fix for Light0 (fault light) is not truning off in WebUI
+- Fix for Light0 (fault light) is not turning off in WebUI
 - INSTRUKCJA_PL.md updated with details about symptoms collection in case of faults
 - Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
-- Repositorium structure change in order to simplify development work and resolve library dependencies problems
+- Repositorium structure change to simplify development work and resolve library dependencies problems
 - Logs format change
 
 ## [1.6.0] - 2022-06-23
 
 ### Added
 - OTA Firmware update progress on LCD
-- Option to use comma ',' as decimal separator in CSV file (SD card) via WebUI Congifuration menu
+- Option to use comma ',' as decimal separator in CSV file (SD card) via WebUI Configuration menu
 
 ### Changed
-- corrected dogs re-runs off state on LCD after number of running dogs change
+- corrected dogs re-runs off state on LCD after number of running dogs' change
 - code refactoring in main.h/cpp, RaceTime and NetTime
 - fix for proper handling of csv with tag 1
 - FCI / NAFA staring sequence separated from 2 / 3 digits accuracy
-- Short press of mode button now changes accuracy, without chaging starting sequence
+- Short press of mode button now changes accuracy, without changing starting sequence
 - FCI / NAFA starting sequence can be changed by long press of button 4 on remote control or via WebUI Configuration menu
 
 ## [1.5.3] - 2022-06-13
@@ -132,7 +133,7 @@ All notable changes to this project will be documented in this file.
 - LCD screen indicator for active WiFi (letter "W")
 - fix for invisible dog with perfect crossing (TC 31)
 - fix for fake dog 1 time due to sensors noise (TC 37 and TC 41)
-- fix for big cross treated as sceanrio TC 40 (TC 46)
+- fix for big cross treated as scenario TC 40 (TC 46)
 
 ### Changed
 - improved detection of false "ok" crossing to cover true cross up to 2s
@@ -150,7 +151,7 @@ All notable changes to this project will be documented in this file.
 
 - 2 new simulated races
 - polish instruction of use
-- added wifi on/off via console command
+- added WiFi on/off via console command
 
 ### Changed
 
@@ -158,7 +159,7 @@ All notable changes to this project will be documented in this file.
 - Refactoring ("if" and "boolean")
 - ISR function update to avoid watchdog timeouts (ETS could reset while in "READY" state and sensors triggered)
 - fix for PowerOnTag always 0 in WebUI
-- fix for reverted logic of Re-runs OFF columnt in csv (SD card)
+- fix for reverted logic of Re-runs OFF column in csv (SD card)
 - small logs cleanup due to SDK update
 - 2 racing algorithm fixes (fault after invisible dog)
 - SD card column "reruns off" update
@@ -171,10 +172,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Long press of laser button toggling Wifi state OFF and ON
-- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/reruns their faults)
-- Simulated race 44 and deactivation of filtering time 350ms for sensors reading in case of first entering dog
-  This is not real case sceanrio, but without it human simulating dog enter could cause confusing OK enter time
-- Number of racign dogs and re-runs off indicator added to race data saved on SD card
+- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/rerun their faults)
+- Simulated race 44 and deactivation of filtering time 350ms for sensors reading in case of first entering dog.
+  This is not real case scenario but without it, human simulating dog enter could cause confusing OK enter time
+- Number of racing dogs and re-runs off indicator added to race data saved on SD card
 
 ### Changed
 
@@ -186,7 +187,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/reruns their faults)
+- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/rerun their faults)
 
 ### Changed
 
@@ -204,10 +205,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Side Switch button renamed to Mode button. Single press --> Mode change (NAFA, FCI). Double press --> Run direction switch
-- Websocket interface optimisation by reducing size of RaceData JSON
+- Websocket interface optimization by reducing size of RaceData JSON
 - main.cpp refactoring
 - Sensor filtering time changed from 5ms to 6ms
-- Migratino to Angular 13
+- Migration to Angular 13
 
 ## [1.0.0] - 2022-02-16
 
@@ -233,8 +234,8 @@ All notable changes to this project will be documented in this file.
 - Total crossing time replaced with Net time
 - Modified main race handling algorithm to be in line with FCI EJS requirements:  only S1 line used for time calculations
 - Re-run algorithm changes to assure proper order of re-running dogs
-- Code optimizations to reduce non essential tasks execution while race is running
-- Modified lights set-up and starting sequence in order to assure more accurate sync between lights and race start
+- Code optimizations to reduce non-essential tasks execution while race is running
+- Modified lights set-up and starting sequence to assure more accurate sync between lights and race start
 - WebUI and LCD layout changes
 
 ### Removed

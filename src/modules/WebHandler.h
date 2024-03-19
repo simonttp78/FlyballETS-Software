@@ -81,6 +81,7 @@ public:
    bool bSendRaceData = false;
    bool bUpdateRaceData = false;
    bool bUpdateTimerWebUIdata = false;
+   bool bFwUpdateInProgress = false;
    unsigned int uiLastProgress = 0; // last % OTA progress value
    enum RaceDataFields
    {

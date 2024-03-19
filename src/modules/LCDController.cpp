@@ -355,12 +355,12 @@ void LCDControllerClass::FirmwareUpdateProgress(String strNewValue)
 
 void LCDControllerClass::FirmwareUpdateSuccess()
 {
-   _UpdateLCD(4, 0, String("              OTA Success               "), 40);
+   _UpdateLCD(4, 0, String("           FW Update Success            "), 40);
 }
 
 void LCDControllerClass::FirmwareUpdateError()
 {
-   _UpdateLCD(4, 0, String("              OTA Error                 "), 40);
+   _UpdateLCD(4, 0, String("            FW Update ERROR             "), 40);
 }
 
 /// <summary>
