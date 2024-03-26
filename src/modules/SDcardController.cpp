@@ -73,7 +73,8 @@ void SDcardControllerClass::init()
          {
             createDir(SD_MMC, "/SENSORS_DATA");
          }
-         listDir(SD_MMC, "/", 1);
+         listDir(SD_MMC, "/", 0);
+         listDir(SD_MMC, "/SENSORS_DATA", 0);
          vTaskDelay(200);
 
          // Check last tag value and increase it by one or create new tag.txt file with initial value 1

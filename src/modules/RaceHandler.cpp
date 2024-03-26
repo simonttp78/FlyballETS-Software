@@ -157,9 +157,24 @@ void RaceHandlerClass::Main()
             // excluding case after early cross. Fix for TC48 (A-106-13)
             if (_strTransition.substring(_strTransition.length() - 1) == "a" && _strPreviousTransitionFirstLetter == "B" && _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] >= 0)
             {
-               _ChangeDogState(GOINGIN);
-               _bS1StillSafe = true;
-               log_d("Seems next dog stil didn't enter gate as S1 state 'a' detected.");
+               if (!_bPrepareToRestoreokCrossing)
+               {
+                  _ChangeDogState(GOINGIN);
+                  _bS1StillSafe = true;
+                  log_d("Seems next dog stil didn't enter gate as S1 state 'a' detected.");
+               }
+               else
+               {
+                  _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                  _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+                  _bPrepareToRestoreokCrossing = false;
+                  LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+#ifdef WiFiON
+                  WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+#endif
+                  log_d("It wasn't 'false ok' crossing. Restoring 'ok' for dog %i.", iCurrentDog + 1);
+               }
             }
             else
             {
@@ -251,7 +266,7 @@ void RaceHandlerClass::Main()
       if (iNextDogChanged != iNextDog)
          log_d("Next Dog is %i.", iNextDog + 1);
 
-      // Handle sensor 1 events (handlers side) with gates CLEAR
+      // Handle SENSOR 1 events (handlers side) with gates CLEAR
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear and S1 sensor is HIGH (A)
       {
          // Update race elapsed time
@@ -375,13 +390,14 @@ void RaceHandlerClass::Main()
 #ifdef WiFiON
             WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
 #endif
+            _bPrepareToRestoreokCrossing = true;
             log_d("False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
          // else
          //    log_d("Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
-      ////Handle sensor 1 events (handlers side) with gates state DOG IN
+      ////Handle SENSOR 1 events (handlers side) with gates state DOG IN
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear && iCurrentDog < 5) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
          // If negative cross detected and S1 crossed above 6ms from S2 crossing
@@ -621,6 +637,7 @@ void RaceHandlerClass::Main()
          log_d("Tstring: %s", _strTransition.c_str());
          // The gates are clear, set flag
          _bGatesClear = true;
+         _bPrepareToRestoreokCrossing = false;
          _llGatesClearedTime = MICROS;
          log_d("Gate: CLEAR.");
 
@@ -943,6 +960,7 @@ void RaceHandlerClass::ResetRace()
       _bLastStringBAba = false;
       _bNoValidCleanTime = false;
       _bWrongRunDirectionDetected = false;
+      _bPrepareToRestoreokCrossing = false;
       for (auto &bFault : _bDogFaults)
          bFault = false;
       for (auto &bManualFault : _bDogManualFaults)
@@ -1157,7 +1175,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
          std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
          strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
          _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
-         //log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
+         // log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
       }
       else
       {
@@ -1167,7 +1185,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
          std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
          strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
          _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
-         //log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
+         // log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
       }
    }
    else if (State == ON) // only autodetected faults are handled by this
