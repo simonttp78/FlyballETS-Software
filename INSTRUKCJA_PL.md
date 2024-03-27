@@ -145,6 +145,8 @@ Po zalogowaniu przy użyciu loginu "Admin" i hasła (domyślnie "FlyballETS.1234
 #### Strona Firmware update
 Została opisane na początku instrukcji w punkcie dotyczącym aktualizacji oprogramowania systemowego.
 
+## Przywrócenie ustawień fabrycznych
+Gdyby nastąpiły problemy z logowaniem do interfejsu www (WiFi) lub któreś z haseł zostało zapomniane istnieje możliwość przywrócenia ustawień fabrycznych. W tym celu należy bardzo długo (powyżej 10s) przytrzymać przycisk 'Laser'.
 
 ## Zgłaszanie usterek oprogramowania
 System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to tak sfilmować zmiany psów, aby jednocześnie widzieć reakcję systemu (przecięcia wiązek). W przypadku wykrycia dziwnego zachowania, w szczególności niespodziewanych wartości na wyświetlaczu, bardzo proszę o przesłanie mi:

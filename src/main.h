@@ -129,7 +129,7 @@ byte byLastStadyState = 0;
 byte byLastFlickerableState = 0;
 const uint16_t DEBOUNCE_DELAY = 30;    // in ms
 const uint16_t SHORT_PRESS_TIME = 700; // in ms
-const uint16_t VERYLONG_PRESS_TIME = 5000; //in ms
+const uint16_t VERYLONG_PRESS_TIME = 10000; //in ms
 
 // String for serial comms storage
 String strSerialData;
