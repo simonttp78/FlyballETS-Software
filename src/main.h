@@ -15,6 +15,7 @@
 #include <WiFiClientSecure.h>
 #endif
 #include <EEPROM.h>
+#include <nvs_flash.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
 //#include <time.h>
@@ -51,6 +52,7 @@ void serialEvent();
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
 void ToggleWifi();
+void FactoryReset();
 void Core1Race(void *parameter);
 void Core1Lights(void *parameter);
 void Core1LCD(void *parameter);
@@ -127,6 +129,7 @@ byte byLastStadyState = 0;
 byte byLastFlickerableState = 0;
 const uint16_t DEBOUNCE_DELAY = 30;    // in ms
 const uint16_t SHORT_PRESS_TIME = 700; // in ms
+const uint16_t VERYLONG_PRESS_TIME = 5000; //in ms
 
 // String for serial comms storage
 String strSerialData;

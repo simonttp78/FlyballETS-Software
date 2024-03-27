@@ -457,6 +457,9 @@ void HandleSerialCommands()
    // Toggle wifi on/off
    if (strSerialData == "fwver")
       Serial.printf("Firmware version: %s\r\n", FW_VER);
+   // Factory Reset
+   if (strSerialData == "factoryreset")
+      FactoryReset();
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)
@@ -557,7 +560,7 @@ void HandleRemoteAndButtons()
             }
          }
          // Actions for LONG button press
-         else if (llPressDuration > SHORT_PRESS_TIME)
+         else if (llPressDuration > SHORT_PRESS_TIME && llPressDuration <= VERYLONG_PRESS_TIME)
          {
             log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3) // Dog 1 fault RC button - toggling reruns off/on
@@ -569,6 +572,12 @@ void HandleRemoteAndButtons()
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
                ToggleWifi();
          }
+         else if (llPressDuration > VERYLONG_PRESS_TIME)
+         {
+            log_d("%s VERY LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Factory Reset (NVM re-init)
+               FactoryReset();
+         }
       }
    }
    // Laser deativation
@@ -579,6 +588,19 @@ void HandleRemoteAndButtons()
       log_i("Turn Laser OFF.");
    }
 }
+
+/// <summary>
+///   Factory Reset - erasing and initializing NVM.
+/// </summary>
+void FactoryReset()
+{
+   Serial.println("Trying to erse all NVS flash...");
+   if (nvs_flash_erase() != ESP_OK) Serial.println("===> Error with Flash Erase.");
+   if (nvs_flash_init() != ESP_OK) Serial.println("===> Error with Flash INIT.");
+   vTaskDelay(1000);
+   ESP.restart();
+}
+
 
 /// <summary>
 ///   Gets pressed button string for consol printing.

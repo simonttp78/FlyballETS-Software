@@ -4,10 +4,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Factory reset option when with very long (above 5s) press of Laser button
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
 - suspend Light and Race processing during FW update
+- fix for false detection of false 'ok'
 
 ## [1.15.5] - 2023-03-19
 
