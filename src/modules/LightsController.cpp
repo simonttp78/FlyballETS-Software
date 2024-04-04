@@ -89,10 +89,10 @@ void LightsControllerClass::Main()
          _lLightsOutSchedule[i] = 0; // Delete schedule
 #ifdef WiFiON
          if (i < 2)
-            {
-               WebHandler.bUpdateLights = true;
-               //log_d("UpdateLights i<2");
-            }
+         {
+            WebHandler.bSendLightsAndRaceData = true;
+            // log_d("UpdateLights i<2");
+         }
 #endif
       }
    }
@@ -109,8 +109,8 @@ void LightsControllerClass::Main()
       _byCurrentLightsState = _byNewLightsState;
 #ifdef WiFiON
       // Send data to websocket clients
-      WebHandler.bUpdateLights = true;
-      //log_d("UpdateLights");
+      WebHandler.bSendLightsAndRaceData = true;
+      // log_d("UpdateLights");
 #endif
    }
 }

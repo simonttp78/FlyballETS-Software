@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
+- sending RaceData when sending LightData
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
