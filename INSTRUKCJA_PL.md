@@ -5,8 +5,8 @@ ETS oznacza Electronic Training System (Elektroniczny System Treningowy) i jest 
 
 ## Przygotowanie ETS do pracy
 
-Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.4 - 1.5m. Większa odległość może powodować "szum sensorów" podczas przebiegania psa.
-Max. rozstawienie nie powinno przekraczać 1.7m.
+Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.3 - 1.4m. Większa odległość może powodować "szum sensorów" podczas przebiegania psa.
+Max. rozstawienie nie powinno przekraczać 1.5m.
 - Po wstępnym rozstawieniu stóp nałożyć część aktywną i wstępnie dokręcić zachowując poziom przy użyciu "poziomicy / oczka"
 - Skorygować ustawienie stopy tak, aby linia startu/mety pokrywała się z linią czujników od strony handlerów. Docisnąć stopę
 - Skorygować ustawienie poziomu części aktywnej oraz jej kąt względem toru, tak aby wiązka była prostopadła do toru
@@ -26,14 +26,14 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 
 1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.14.0"). Od wersji 1.9.0 informacja o wersji firmware widoczna jest także w stopce interfejsu www (WiFi).
 2. Otworzyć stronę z aktualizacjami firmware'u, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
-3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
+3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecana jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
 
 #### Wykonanie aktualizacji firmware
-Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Safari też działa, za wyjątkiem paska postępu (trzeba cierpliwie czekać).
+Aktualizacja była testowana na przeglądarkach Chrome oraz Safari. Paski postępu niekoniwcznie muszą działać prawidłowo, niemniej jest widoczny na wyświetlaczu LCD.
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
-3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [192.168.20.1]
+3. Otworzyć w przeglądarce stronę główną systemu ETS przez wpisanie w przeglądarkę [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
 5. Opcjonalnie (zależy od wersji oprogramowania) zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
 6. Kliknąć w pole "Select file..." ("Wybierz plik") i wskazać pobrany plik z rozszerzeniem ".bin"
@@ -53,7 +53,7 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 - Symbol ">" lub "<" w prawym dolnym rogu oznacza kierunek nabiegania psa. Zalecane jest ustawianie aktywnej części ETSa po prawej stronie patrząc w kierunku boksu.
 - Jeśli pies miał błąd, który został poprawiony, czyli pies będzie miał więcej niż jeden czas w danym biegu, wówczas na wyświetlaczu czasy te będą się wyświetlały naprzemiennie z oznaczeniem na końcu, który czas jest wyświetlany (*1 - pierwszy dostępny czas, *2 - drugi czas z poprawiania błędu)
 - Jeżeli funkcja "Bez powtórek / Re-runs OFF" jest aktywna, to na wyświetlaczu pojawiają się sufixy "*X"
-- W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS ("G"), aktywnym WiFi ("W") oraz włożeniu karty SD ("sd")
+- W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS ("G"), aktywnym WiFi ("W") oraz włożonej karcie SD ("sd")
 - Przełączanie trybu pracy (mode: FCI lub NAFA) powoduje chwilowe wyświetlenie na ekranie informacji, który tryb został wybrany. Tryb pracy jest zapisywany w pamięci.
 - Pojawienie się w miejscu wyników pierwszego psa wartości "<- -> ERROR" przy jednoczesnym zapaleniu 4 świateł błędów oznacza, że system wykrył nieprawidłowy odczyt czujników spowodowany najprawdopodobniej złym ustawieniem kierunku biegu (zmina przyciskiem 'side switch' lub w menu Configuration interfejsu www)
 
@@ -64,10 +64,10 @@ Funkcje przycisków pilota:
 - 1 START / STOP
 - 2 RESET
 - 3, 4, 5, 6 w trakcie biegu -> ręczne oznaczenie błędu psa (odpowiednio 1, 2, 3, 4) np. gdy zostanie upuszczona piłka
-- 3, 4, 5, 6 w trybie gotowości (READY, po resecie) -> wybór, ile psów będzie brało udział w danym biegu
+- 3, 4, 5, 6 w trybie gotowości (READY) -> wybór, ile psów będzie brało udział w danym biegu
 - długie naciśnięcie (puścić przycisk po ok. 2s) 3 w trybie gotowości (READY) -> włączenie/wyłączenie funkcji "Bez powtórek / Re-runs OFF"
 - długie naciśnięcie (puścić przycisk po ok. 2s) 4 w trybie gotowości (READY) -> przełączenie między sekwencją startową NAFA i FCI (funkcja przycisku "Tryb / Mode" na obudowie przed wersją oprogramowania v1.6.0)
-UWAGA! Sygnał pilota dociera do systemu z opóźnieniem. To znaczy, że bardzo krótkie naciśnięcie przycisków nie będzie dawało reakcji (syngał nie dotrze to procesora).
+UWAGA! Detekcja przycisków pilota ma lekkie opóźnienie. To znaczy, że bardzo krótkie naciśnięcie przycisku nie będzie dawało reakcji (syngał nie dotrze to procesora).
 Dla prawidłowego działania trzeba przytrzymać przycisk pilota przez ok. 0,5s. Można odnieść mylne wrażenie, że mocne przyciskanie "pomaga". To nie jest prawdą. Nie liczy się siła nacisku, a czas jego trwania.
 
 
@@ -77,8 +77,9 @@ Dla prawidłowego działania trzeba przytrzymać przycisk pilota przez ok. 0,5s.
 
 #### Od strony handlerów
 - Płaski przycisk "Laser".
-  Krótkie przyciśnięcie aktywuje diody służące to pozycjonowania systemu. Domyślny czas działania to 60s. Modyfikowany w menu "Configuration" (WiFi)
-  Długie przyciśnięcie włącza/wyłącza funkcję WiFi
+  Krótkie przyciśnięcie aktywuje diody służące to pozycjonowania systemu. Domyślny czas działania to 180s (do wersji v1.15.9 było to 60s). Modyfikowany w menu "Configuration" (WiFi).
+  Długie przyciśnięcie włącza/wyłącza funkcję WiFi.
+  Od wersji oprogramowania v1.15.9 bardzo długie (powyżej 10s) przytrzymanie przycisku powoduje przywrócenie ustawień "fabrycznych"
 - Wypukły przycisk "Tryb / Mode"
   Krótkie przyciśnięcie zmienia dokładność wyświeltanych wyników między setnymi lub tysięcznymi częściami sekundy.
   Długie przyciśnięcie przełącza kierunek biegu ("side switch"): normalny (aktywna jednostka po prawej), lub odwrócony/inverted jeśli aktywna jednostka jest po lewej
@@ -88,31 +89,32 @@ Dla prawidłowego działania trzeba przytrzymać przycisk pilota przez ok. 0,5s.
 Aby zapewnić żywotność baterii:
 - Nie zaleca się przechowywania aktywnej jednostki w temperaturach poniżej 10st.C, natomiast trening jak najbardziej można prowadzić w temperaturach do 0st.C.
 - Jeśli w trakcie treningu nie jest wykorzystywana funkcja WiFi, to można ją wyłączyć (długie przyciśniecie płaskiego przycisku "laser"). Domyślnie WiFi jest zawsze włączone.
-- Pomimo zabezpieczeń nie jest zalecane, aby często była używana z poniżej 15% poziomu naładowania
+- Pomimo zabezpieczeń nie jest zalecane, aby często używać system z baterią poniżej 15% poziomu naładowania
 - Baterie LiIon nie należy często ładować bardzo długo (do maksymalnej pojemności). Lepiej, aby ładowanie zakończyć w momencie, gdy niebieska dioda ładowania (nad gniazdem ładowania) zgaśnie. Nie jest niczym złym, gdy odłączy się zasilacz np. 2h od momentu zgaśnięcia diody, ale częste długie ładownie (np. przez noc) jest nizalecane
-- W trakcie ładowania baterii nie można korzystać z ETSa. Dopiero po odłączeniu zasilacza możliwe jest uruchomienie systemu
+- W trakcie ładowania baterii nie można korzystać z ETSa. Dopiero po odłączeniu zasilacza możliwe jest uruchomienie systemu.
+  AKTUALIZACJA: Istnieje możliwość wykonania modyfikacji sprzętu, pozwalającej na ładowanie baterii w trakcie używania. Wymaga to wykonania dwóch zworek na płycie głównej systemu.
 
 
 ## GPS
 - Oczywiście działa wyłącznie na zewnątrz. W przypadku zimowych treningów w zamkniętych / ograniczonych pomieszczeniach, niestety nie przydaje się
 - Aktualnie służy głównie do synchronizacji czasu, który wykorzystywany jest przy zapisywaniu danych na karcie SD
-- Jeśli komunikacja z satelitami GPS nie jest możliwa, to system zakłada pseudo datę/czas jako 2021-01-01 13:00:00
+- Jeśli komunikacja z satelitami GPS nie jest możliwa, to system zakłada pseudo datę/czas jako 202x-01-01 13:00:00
 - W przyszłości być może posłuży do synchronizacji czasu w między dwoma ETSami w trybie "sparing"
 
 
 ## Karta SD
-- Zapisywane są na niej dane w treningów, przy czym jeśli ETS nie jest wyłączany nie nastąpiły żadne resety, to wszystkie biegi z treningu powinno być w jednym wspólnym pliku CSV.
-- Pliki mają tworzone unikatowe tagi. Nowy tag tworzony jest z pierwszym zakończonym biegiem po resecie / włączeniu systemu. Tak to kolejna liczba z zakresu 1 do 9999.
-- Można wyzerować tag przez usunięcie pliku tag.txt z folderu głównego. Należy wówczas usunąć także wszystkie pliki z danymi z wcześniejszych treningów
-- Karta SD powinno być sformatowana w FAT32. Pliki z danymi z wyścigu zapisywane są w głównym katalogu.
-- W katalogu SENSORS_DATA zapisywane są odczyty z czujników. Służą one do analizy ewentualnych błędów / dziwnych zachować systemu i są bezcenne do odtwarzania problemów i robienia korekcji.
+- Zapisywane są na niej dane z treningów, przy czym jeśli ETS nie jest wyłączany, to wszystkie biegi z treningu powinno być w jednym pliku CSV.
+- Pliki mają tworzone unikatowe tagi. Nowy tag tworzony jest z pierwszym zakończonym biegiem po resecie / włączeniu systemu. "Tag" to kolejna liczba z zakresu 0001 do 9999.
+- Można wyzerować tag przez usunięcie pliku tag.txt z katalogu głównego. Należy wówczas usunąć także wszystkie pliki z danymi z wcześniejszych treningów
+- Karta SD powinna być sformatowana w FAT32. Pliki z danymi z wyścigu zapisywane są w katalogu głównym.
+- W katalogu SENSORS_DATA zapisywane są odczyty z czujników. Służą one do analizy ewentualnych błędów / dziwnych zachować systemu i są bezcenne do odtwarzania problemów i przygotowania ewentualnych korekcji.
 - Domyślnym separatorem dziesiętnym jest kropka '.' tak jak to widać na wyświetlaczu LCD czy przez interfejs WiFi. Może to być jednak kłopotliwe w przypadku pliku CSV na karcie SD, bo odczytując plik w arkuszu kalkulacyjnym w krajach, gdzie separatorem dziesiętnym jest przecinek ',' wartości liczbowe nie zostaną automatycznie przekonwertowane. Z tego powodu w menu Configuration interfejsu www (WiFi) jest możliwość aktywowania funkcji "Używaj przecinka ',' jako separatora dziesiętnego w pliku CSV"
 - Włożenie lub wyjęcie karty SD powoduje restart ETSa, oczywiście o ile był włączony
 
 
 ## Światła
 5 świateł jest wykorzystywanych zarówno do sekwencji startowej jak i oznaczania błędów psów. Możliwe jest ustawienie sekwencji startowej stosowanej przez NAFA (USA) używając przycisku "Tryb / Mode".
-Krótkie mrugnięcie górnego białego światła może oznaczać:
+Krótkie mrygnięcie górnego białego światła może oznaczać:
 - ręczne zatrzymanie biegu przyciskiem STOP
 - reset biegu przyciskiem RESET
 - w stanie GOTOWOŚCI / READY problem w wypozycjonowaniu ETSa lub wilgość / krople na czujnikach lub lusterkach.
@@ -121,22 +123,22 @@ Przy źle wypozycjonowanym ETSie w stanie GOTOWOŚĆ / READY górne biało świa
 
 
 ## Interfejs www (WiFi)
-Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów jednocześnie szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
+Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
 
-<b>UWAGA użytkownicy iOSa!!!</b>
+<b>UWAGA użytkownicy iOSa 15 i 16!!!</b>
 Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe restarty systemu.
 
-Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
+W wersji iOS 15 i 16 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
 Link do filmu, gdzie jest to pokazane: [Jak skonfigurować telefon z iOS](https://youtu.be/ohZqT0l43w4)
 
-Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
+Nizależnie od wersji iOS zalecane jest też, aby po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS wejść w opcję:
 Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
 - Prywatny adres Wi-Fi
 - Ograniczaj śledzenie adresu IP
 
 #### Strona główna (Race)
-Na tej stronie dostępne te same funkcje sterowania co przy pomocy pilota z tą różnicą, że jest jeden przycisk zmieniający funkcję (start, stop, reset). Podobnie jest z informacjami z wyświetlacza LCD za wyjątkiem informacji o włożeniu karty SD.
+Na tej stronie dostępne te same funkcje sterowania co przy pomocy pilota z tą różnicą, że jest jeden przycisk zmieniający funkcję (start, stop, reset). Dostępe są także informacjami widoczne też na wyświetlaczu LCD za wyjątkiem informacji o włożeniu karty SD.
 Ręczne włączanie błędu psa można wykonać przez naciśnięcie przycisku "Błąd / Fault" w sekcji danego psa. Podświetli się on wówczas na czerwono.
 
 #### Strona konfiguracji (Configuration)
@@ -168,7 +170,7 @@ Ponieważ konstrukcja systemu bazuje na zasadzie działania EJSa, to dziedziczy 
 - Większość błędów zmiany jest niemierzalna i w zależności od prędkości i wielkości psa może sięgać nawet -0.10s
 - Analogicznie ma się sprawa z bezbłędnymi krosami. System analizuje wyłącznie przecięcia wiązek, ale nie wie, który pies przecina linię startu/mety lub kiedy dokładnie to robi, bo drugi pies już mógł "zakryć" wiązki. Z tego też powodu większość krosów do ok. 0.10s będzie rozpoznawany jako "OK" lub "ok", przy czym małe "ok" jest w większości przypadków nieco gorszym krosem.
 - Wyjątek od powyższej reguły stanowi bardzo mały kros, poniżej 6ms. Wówczas z ograniczeń fizycznych wiadomo, że po przecięciu linii kierunku (tej od boksu) to nabiegający pies musiał przeciąć linię startu mety (powracający nie zdążyłby tego zrobić). W takiej sytuacji system wyświetli "Perfect".
-- Podobnie jak w EJSie błąd psa powoduje, że czas psa poprzedniego jest zakłamany i nie należy go uwzględniać w statystykach
+- Podobnie jak w EJSie błąd psa powoduje, że czas psa poprzedniego jest zakłamany i nie należy go uwzględniać w statystykach (czas jest poprzedzony znakeim '#')
 - Clean Time ma sens wyłącznie dla bezbłędnych przebiegów, dlatego w innym przypadku jest brak wartości "n/a"
 
 Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza zakres tej instrukcji, ciągle mamy wiele pozytywnych funkcji czasami niedostępnych w systemach EJS, np.:
@@ -178,3 +180,4 @@ Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza z
 - automatyczna detekcja błędów zmiany
 - możliwość konfigurowania ilości trenujących psów oraz czy trening jest z powtórkami czy bez
 - wygodne zapisywanie danych na karcie SD w formacie CSV
+- czas krosa wyświetlany pomimo ręcznego zaznaczenia błędu psa
