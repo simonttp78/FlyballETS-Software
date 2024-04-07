@@ -7,8 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-
-## [1.15.9] - 2023-04-07
+## [1.15.10] - 2023-04-07
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
@@ -19,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - suspend Light and Race processing during FW update
 - fix for false detection of false 'ok'
 - default laser diods activity time changed from 60s to 180s
+- compilation year used as default year when GPS is not active
 
 ## [1.15.5] - 2023-03-19
 
@@ -255,8 +255,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.9...HEAD
-[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.15.9
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.10...HEAD
+[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.15.10
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0

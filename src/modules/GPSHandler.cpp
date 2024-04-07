@@ -1,6 +1,7 @@
 //
 #include "GPSHandler.h"
 #include "LCDController.h"
+using namespace std;
 
 HardwareSerial GPSSerial(1);
 
@@ -23,6 +24,9 @@ void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
    GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
    // vTaskDelay(200);
    _HandleSerialPort();
+   std::string strDate = __DATE__;
+   strDate.erase(0, strDate.size() - 4);
+   _iCompilationYear = stoi(strDate);
    _FormatTime();
    log_i("Initial UTC time:  %s", _cUTCTime);
    log_i("Local system time: %s", _cLocalDateAndTime);
@@ -77,7 +81,7 @@ void GPSHandlerClass::_FormatTime()
    tmElements_t tm;
    if (_Tgps.date.year() == 2000)
    {
-      tm.Year = (YEAR - 1970);
+      tm.Year = (_iCompilationYear - 1970);
       tm.Month = 1;
       tm.Day = 1;
       tm.Hour = 12;

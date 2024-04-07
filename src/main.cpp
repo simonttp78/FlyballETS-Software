@@ -84,6 +84,7 @@ void setup()
 
    // Print SW version
    Serial.printf("Firmware version: %s\r\n", FW_VER);
+   Serial.printf("FW compilation date: %s\r\n",__DATE__);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
