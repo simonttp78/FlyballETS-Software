@@ -661,16 +661,14 @@ void RaceHandlerClass::Main()
                _ChangeDogState(COMINGBACK);
                _strPreviousTransitionFirstLetter = "A";
                log_d("New dog state: COMINGBACK. ABab.");
-               if (_bDogManualFaults[iPreviousDog]) // If previous dog has manual fault we assume it's because he missed gate while coming back
-                                                    // If however this will be negative cross scenario flag will be deactivated in S1 sensor section
+               // If previous dog has manual fault and current dog has entering fault we assume it's because he missed gate while coming back
+               // If however this will be negative cross scenario flag will be deactivated in S1 sensor section
+               if (_bDogManualFaults[iPreviousDog] && _bDogFaults[iCurrentDog]) 
                {
                   _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = true;
-                  if (_bDogFaults[iCurrentDog])
-                  {
-                     SetDogFault(iCurrentDog, OFF);
-                     _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     log_d("Assumed previous dog missed the gate, so de-activating dog %i fault.", iCurrentDog + 1);
-                  }
+                  _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  SetDogFault(iCurrentDog, OFF);
+                  log_d("Assumed previous dog missed the gate, so de-activating dog %i fault.", iCurrentDog + 1);
                }
             }
             else if (_strTransition == "BAba" && !_bNegativeCrossDetected && RaceState != STOPPED) // Typical dog coming back case
@@ -1093,11 +1091,6 @@ void RaceHandlerClass::_PrintRaceTriggerRecords()
       printf("{%i, %lld, %i},\r\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
    }
-   while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
-   {
-      printf("{0, 0, 0},\r\n");
-      iRecordToPrintIndex++;
-   }
 }
 
 /// <summary>
@@ -1138,11 +1131,6 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
          rawSensorsReadingFile.print(", ");
          rawSensorsReadingFile.print(RecordToPrint.iSensorState);
          rawSensorsReadingFile.println("},");
-         iRecordToPrintIndex++;
-      }
-      while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
-      {
-         rawSensorsReadingFile.println("{0, 0, 0},");
          iRecordToPrintIndex++;
       }
       rawSensorsReadingFile.close();
@@ -1194,9 +1182,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       _bDogFaults[iDogNumber] = true;
       _bDogDetectedFaults[iDogNumber][iDogRunCounters[iDogNumber]] = true;
       // If crossing fault detected of next dog then set fake time flag for current dog
-      if (iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0))
+      if ((iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)) && !_bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]])
       {
-         _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+        _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
          LCDController.bUpdateThisLCDField[iCurrentDog] = true;
 #ifdef WiFiON
          WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;

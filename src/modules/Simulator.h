@@ -8,7 +8,6 @@
 class SimulatorClass
 {
 protected:
-
 public:
    void init();
    void Main();
@@ -17,8 +16,9 @@ public:
    bool bExecuteSimRaceChange = false;
 
 private:
-   unsigned int _iDataPos;
-   unsigned int _iDataStartPos;
+   uint _iDataPos;
+   uint _iDataStartPos;
+   uint _iDataEndPos;
    bool _bNoMoreValidTriggers = false;
    typedef struct SimulatorRecord
    {
@@ -26,9 +26,20 @@ private:
       long long llSimTriggerTime;
       uint8_t iSimState;
    } SimulatorRecord;
-   static const SimulatorRecord SimulatorQueue[TRIGGER_QUEUE_LENGTH * NumSimulatedRaces] PROGMEM;
-
+   static const SimulatorRecord SimulatorQueue[] PROGMEM;
    SimulatorRecord PendingRecord;
+   uint calculateDataStartPos(uint iSimulatedRaceID);
+   
+   // array of number of records per simulated race
+   u_int8_t _iNumberOfRecordsInSimulatedRace[NumSimulatedRaces] =
+   {
+      56, 34, 26, 24, 24, 40, 46, 38, 44, 48,
+      46, 54, 32, 40, 40, 46, 40, 38, 24, 34,
+      32, 52, 56, 46, 34, 38, 36, 32, 30, 44,
+      48, 42, 42, 32, 44, 38, 46, 50, 44, 32,
+      34, 26, 26, 58, 28, 52, 48, 28, 40,  6,
+       6, 54, 56, 52, 52
+   };
 };
 
 extern class SimulatorClass Simulator;

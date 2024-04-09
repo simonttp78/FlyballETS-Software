@@ -7,18 +7,22 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.15.10] - 2023-04-07
+## [1.16.0] - 2023-04-13
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
 - sending RaceData when sending LightData
+- fix for false detection of "outside" comingback dog when manual fault due to ball drop was marked (TC53)
+- fix for false flagging of invalid dog time in case of negative cross after dog with manual fault (TC51)
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
 - suspend Light and Race processing during FW update
-- fix for false detection of false 'ok'
+- fix for false detection of false 'ok' (TC52)
 - default laser diods activity time changed from 60s to 180s
 - compilation year used as default year when GPS is not active
+- refactored structure of simulated races
+- trigger queque lenghts changed from 70 to 110
 
 ## [1.15.5] - 2023-03-19
 
@@ -255,8 +259,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.10...HEAD
-[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.15.10
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...HEAD
+[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0

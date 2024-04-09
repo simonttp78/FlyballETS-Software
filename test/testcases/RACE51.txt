@@ -5,7 +5,7 @@ Dog 1: outside | CR: F+ 0.030
 Dog 1:   4.302 | CR: +  0.989
 Dog 2:   4.785 | CR:  F fault
 Dog 2:   4.302 | CR: +  0.688
-Dog 3: # 4.396 | CR: -  0.373
+Dog 3:   4.396 | CR: -  0.373
 Dog 3:   4.002 | CR: +  1.698
 Dog 4:   3.752 | CR: +  0.113
  Team:  32.664
