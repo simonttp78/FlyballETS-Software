@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 - sending RaceData when sending LightData
 - fix for false detection of "outside" comingback dog when manual fault due to ball drop was marked (TC53)
 - fix for false flagging of invalid dog time in case of negative cross after dog with manual fault (TC51)
+- manual Race stop indicated by '#' in Team time (except team time is 100s or higher and accuracy is set to 3 digits)
+- added 3s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)

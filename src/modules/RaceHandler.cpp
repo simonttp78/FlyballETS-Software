@@ -74,8 +74,22 @@ void RaceHandlerClass::Main()
       // log_d("GREEN light is ON!");
    }
 
+   if (_bRaceStopRequested)
+   {
+      if (MICROS - _llRaceEndTime >= 3000000)
+      {
+         _bRaceStopRequested = false;
+         _ChangeRaceState(STOPPED);
+      }
+      else if (_bDogManualFaults[iCurrentDog])
+      {
+         _bRaceStopRequested = false;
+         iDogRunCounters[iCurrentDog]++;           
+      } 
+   }
+
    // Update racetime (while running) every 227300ns
-   if (RaceState == RUNNING)
+   if (RaceState == RUNNING && !_bRaceStopRequested)
    {
       if ((MICROS > llRaceStartTime) && (MICROS - llRaceStartTime > _llRaceTime + 227300))
       {
@@ -104,7 +118,8 @@ void RaceHandlerClass::Main()
 
    if (bExecuteStopRace)
    {
-      StopRace();
+      this->StopRace(MICROS);
+      bRaceStoppedManually = true;
       bExecuteStopRace = false;
    }
 
@@ -874,14 +889,6 @@ void RaceHandlerClass::StartRaceTimer()
 /// <summary>
 ///   Stops a race.
 /// </summary>
-void RaceHandlerClass::StopRace()
-{
-   this->StopRace(MICROS);
-}
-
-/// <summary>
-///   Stops a race.
-/// </summary>
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(long long llStopTime)
 {
@@ -909,7 +916,11 @@ void RaceHandlerClass::StopRace(long long llStopTime)
          WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
 #endif
       }
-      _ChangeRaceState(STOPPED);
+      if (bRerunsOff || bRaceStoppedManually || _llRaceTime == 0)
+         _ChangeRaceState(STOPPED);
+      else
+         _bRaceStopRequested = true;
+      //
    }
 }
 
@@ -1030,6 +1041,7 @@ void RaceHandlerClass::ResetRace()
          iCounter = 0;
       _ChangeRaceState(RESET);
       bIgnoreSensors = false;
+      bRaceStoppedManually = false;
       _bRaceSummaryPrinted = false;
 
       if (iCurrentRaceId == 998)
@@ -1044,7 +1056,7 @@ void RaceHandlerClass::ResetRace()
          _sCurrentRaceId = " " + _sCurrentRaceId;
       LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
       LCDController.bUpdateTimerLCDdata = true;
-      _strManualFaultsRecords = "$commands;";
+      _strManualFaultsRecords = "//$commands;";
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -1119,7 +1131,7 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
       else
          rawSensorsReadingFile.print("on");
       rawSensorsReadingFile.println(";");
-      if (_strManualFaultsRecords.length() > 10)
+      if (_strManualFaultsRecords.length() > 12)
          rawSensorsReadingFile.println(_strManualFaultsRecords.c_str());
       while (iRecordToPrintIndex < _iInputQueueWriteIndex)
       {
@@ -1288,6 +1300,8 @@ String RaceHandlerClass::GetRaceTime()
       dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
    }
    strRaceTimeSeconds = cRaceTimeSeconds;
+   if (bRaceStoppedManually && (!_bAccuracy3digits || (_bAccuracy3digits && dRaceTimeSeconds < 100)))
+      strRaceTimeSeconds[0] = '#';
    return strRaceTimeSeconds;
 }
 

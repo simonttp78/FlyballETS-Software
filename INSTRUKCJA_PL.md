@@ -46,6 +46,7 @@ Aktualizacja była testowana na przeglądarkach Chrome oraz Safari. Paski postę
 - W trakcie uruchamiania na ekranie LCD wyświetlana jest wersja firmware'u
 - Dokładność wyświetlanych czasów może być z dokładnością do 3 lub 2 miejsc po przecinku. Zmiana przy pomocy przycisku "mode / tryb"
 - Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "n/a".
+- Jeśli bieg został zatrzymany ręcznie, czas drużyny (Team) jest nieważny i poprzedzony znakiem "#" 
 - Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony znakiem "#"
 - Jeśli błąd psa został zaznaczony ręcznie (np. pies nie doniósł piłki) czas dobiegu/krosa będzie poprzedzony literką "F" oznaczającą błąd (Fault), 
 - W prawym górnym rogu wyświetlany jest nr biegu. Ten numer zapisany jest też na karcie SD. Służy do identyfikacji biegu

@@ -1,0 +1,10 @@
+$init;setdogs 4;reruns on;
+$commands1;28.0;d1f;
+Dog 1:   4.486 | CR: -  0.102
+Dog 1:   5.126 | CR: F+ 0.645
+Dog 1:   4.727 | CR: +  3.561
+Dog 2:   4.631 | CR: +  0.346
+Dog 3:   6.134 | CR:       OK
+Dog 4:   4.781 | CR: +  0.415
+ Team:  34.749
+   CT:     n/a

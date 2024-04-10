@@ -38,13 +38,13 @@ public:
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
    bool bIgnoreSensors = false;
+   bool bRaceStoppedManually = false;
    volatile bool bExecuteStopRace;
    volatile bool bExecuteResetRace;
    volatile bool bExecuteStartRaceTimer;
 
    void Main();
    void StartRaceTimer();
-   void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
    void IRAM_ATTR TriggerSensor1(portMUX_TYPE *spinlock);
@@ -126,8 +126,9 @@ private:
    bool _bPotentialNegativeCrossDetected;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
    bool _bWrongRunDirectionDetected = false;
-   long long _llLastDogTimeReturnTimeStamp[4];
+   bool _bRaceStopRequested = false;
    int8_t _iLastReturnedRunNumber[4];
+   long long _llLastDogTimeReturnTimeStamp[4];
    long long _llDogEnterTimes[5];
    long long _llDogExitTimes[4];
    long long _llDogTimes[4][4];
@@ -135,7 +136,7 @@ private:
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
-   std::string _strManualFaultsRecords = "$commands;";
+   std::string _strManualFaultsRecords = "//$commands;";
 
    enum _byDogStates
    {
