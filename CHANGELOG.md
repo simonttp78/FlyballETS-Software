@@ -15,7 +15,8 @@ All notable changes to this project will be documented in this file.
 - fix for false detection of "outside" comingback dog when manual fault due to ball drop was marked (TC53)
 - fix for false flagging of invalid dog time in case of negative cross after dog with manual fault (TC51)
 - manual Race stop indicated by '#' in Team time (except team time is 100s or higher and accuracy is set to 3 digits)
-- added 3s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
+- added 2s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
+- added correction for last dog in recing doing re-run after it cameback outside the gate (TC56)
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
@@ -25,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - compilation year used as default year when GPS is not active
 - refactored structure of simulated races
 - trigger queque lenghts changed from 70 to 110
+- correct false "false" crossing (now crosing is null " ")for dog entering after previous dog comingback outside the gate
 
 ## [1.15.5] - 2023-03-19
 
