@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - sending RaceData when sending LightData
 - fix for false detection of "outside" comingback dog when manual fault due to ball drop was marked (TC53)
 - fix for false flagging of invalid dog time in case of negative cross after dog with manual fault (TC51)
-- manual Race stop indicated by '#' in Team time (except team time is 100s or higher and accuracy is set to 3 digits)
+- manual Race stop have no valid time therefore "nt" is shown (no time)
 - added 2s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
 - added correction for last dog in recing doing re-run after it cameback outside the gate (TC56)
 
@@ -26,7 +26,8 @@ All notable changes to this project will be documented in this file.
 - compilation year used as default year when GPS is not active
 - refactored structure of simulated races
 - trigger queque lenghts changed from 70 to 110
-- correct false "false" crossing (now crosing is null " ")for dog entering after previous dog comingback outside the gate
+- correct false "false" crossing (now value "nt"/no time is shown)for dog entering after previous dog comingback outside the gate
+- in case of no Clean Time "nt" (no time) is displayed instead of "n/a".
 
 ## [1.15.5] - 2023-03-19
 

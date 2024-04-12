@@ -85,8 +85,8 @@ void RaceHandlerClass::Main()
       else if (_bDogManualFaults[iCurrentDog])
       {
          _bRaceStopRequested = false;
-         iDogRunCounters[iCurrentDog]++;           
-      } 
+         iDogRunCounters[iCurrentDog]++;
+      }
    }
 
    // Update racetime (while running) every 227300ns
@@ -281,7 +281,7 @@ void RaceHandlerClass::Main()
          iNextDog = iCurrentDog + 1;
       if (iNextDogChanged != iNextDog)
          log_d("Next Dog is %i.", iNextDog + 1);
-//--------------------------------------------------------------------------------------------------------------------
+      //--------------------------------------------------------------------------------------------------------------------
       // Handle SENSOR 1 events (handlers side) with gates CLEAR
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear and S1 sensor is HIGH (A)
       {
@@ -395,13 +395,14 @@ void RaceHandlerClass::Main()
             _ChangeDogNumber(iNextDog);
          }
          // Special case for last dog in race doing rerun after he came back outside the gate (TC56)
-         else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000   // Filter out S1 HIGH signals that are < 2 seconds after dog enter time
+         else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 // Filter out S1 HIGH signals that are < 2 seconds after dog enter time
                   && (iCurrentDog == iNextDog && _bDogManualFaults[iCurrentDog]))
          {
             _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llLastDogExitTime - _llDogEnterTimes[iCurrentDog];
             _bDogMissedGateComingback[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+            _bNoValidCrossingTime[iNextDog][iDogRunCounters[iNextDog] + 1] = true;
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             // Clear fault for the dog as he started rerun.
             SetDogFault(iCurrentDog, OFF);
@@ -432,7 +433,7 @@ void RaceHandlerClass::Main()
          // else
          //    log_d("Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
-//---------------------------------------------------------------------------------------------------------------------
+      //---------------------------------------------------------------------------------------------------------------------
       ////Handle SENSOR 1 events (handlers side) with gates state DOG IN
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear && iCurrentDog < 5) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
@@ -445,6 +446,7 @@ void RaceHandlerClass::Main()
             if (_bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]]) // Clear flag if set as previous dog is comming back so he didn't missed the gate
             {
                _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
+               _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
                if (_bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]])
                {
                   SetDogFault(iCurrentDog, ON);
@@ -552,7 +554,7 @@ void RaceHandlerClass::Main()
          // else
          //    log_d("Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
-//----------------------------------------------------------------------------------------------------------------------
+      //----------------------------------------------------------------------------------------------------------------------
       // Handle sensor 2 (box side)
       if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear S2 sensor is HIGH (B)
       {
@@ -699,12 +701,17 @@ void RaceHandlerClass::Main()
                log_d("New dog state: COMINGBACK. ABab.");
                // If previous dog has manual fault and current dog has entering fault we assume it's because he missed gate while coming back
                // If however this will be negative cross scenario flag will be deactivated in S1 sensor section
-               if (_bDogManualFaults[iPreviousDog] && _bDogFaults[iCurrentDog]) 
+               if (_bDogManualFaults[iPreviousDog] && _bDogFaults[iCurrentDog])
                {
                   _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = true;
+                  _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   SetDogFault(iCurrentDog, OFF);
                   _bDogDetectedFaults[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+                  LCDController.bUpdateThisLCDField[iPreviousDog] = true;
+#ifdef WiFiON
+                  WebHandler.bUpdateThisRaceDataField[iPreviousDog] = true;
+#endif
                   log_d("Assumed previous dog missed the gate, so de-activating dog %i fault.", iCurrentDog + 1);
                }
             }
@@ -1041,6 +1048,11 @@ void RaceHandlerClass::ResetRace()
          for (auto &bDogMissedGateComingback : Dog)
             bDogMissedGateComingback = false;
       }
+      for (auto &Dog : _bNoValidCrossingTime)
+      {
+         for (auto &bNoValidCrossingTime : Dog)
+            bNoValidCrossingTime = false;
+      }
       for (auto &llTime : _llDogEnterTimes)
          llTime = 0;
       for (auto &llTime : _llDogExitTimes)
@@ -1078,7 +1090,8 @@ void RaceHandlerClass::ResetRace()
          _sCurrentRaceId = " " + _sCurrentRaceId;
       LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
       LCDController.bUpdateTimerLCDdata = true;
-      _strManualFaultsRecords = "//$commands;";
+      _strManualFaultsRecords = "// $commands;";
+      _strRaceManualStopTime = "";
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -1105,12 +1118,10 @@ void RaceHandlerClass::_PrintRaceSummary()
       SDcardController.SaveRaceDataToFile();
       //_PrintRaceTriggerRecordsToFile();
    }
-#if !Simulate
-   if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
+   if (CORE_DEBUG_LEVEL >= ESP_LOG_VERBOSE)
       _PrintRaceTriggerRecords();
    if (SDcardController.bSDCardDetected)
       _PrintRaceTriggerRecordsToFile();
-#endif
 }
 
 /// <summary>
@@ -1145,7 +1156,7 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
       rawSensorsReadingFile.print("Race ID: ");
       rawSensorsReadingFile.println(RaceHandler.iCurrentRaceId + 1);
       uint8_t iRecordToPrintIndex = 0;
-      rawSensorsReadingFile.print("//$init;setdogs ");
+      rawSensorsReadingFile.print("// $init;setdogs ");
       rawSensorsReadingFile.print(iNumberOfRacingDogs);
       rawSensorsReadingFile.print(";reruns ");
       if (bRerunsOff)
@@ -1153,8 +1164,13 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
       else
          rawSensorsReadingFile.print("on");
       rawSensorsReadingFile.println(";");
-      if (_strManualFaultsRecords.length() > 12)
+      if (_strManualFaultsRecords.length() > 13)
          rawSensorsReadingFile.println(_strManualFaultsRecords.c_str());
+      if (bRaceStoppedManually)
+      {
+         rawSensorsReadingFile.print("// Manual Race STOP time: ");
+         rawSensorsReadingFile.println(_strRaceManualStopTime.c_str());
+      }
       while (iRecordToPrintIndex < _iInputQueueWriteIndex)
       {
          STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
@@ -1185,31 +1201,23 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    if (RaceState == STOPPED || RaceState == RESET)
       return;
    bool bFault;
+   bool bCalculateManualFaultTimestamp = false;
    // Check if we have to toggle. Assumed only manual faults use TOGGLE option
    if (State == TOGGLE)
    {
       bFault = !_bDogManualFaults[iDogNumber];
       _bDogManualFaults[iDogNumber] = bFault;
-      long long llManualFaultTimestamp = MICROS - llRaceStartTime;
       if (bFault)
       {
          _bDogDetectedManualFaults[iDogNumber][iDogRunCounters[iDogNumber]] = true;
-         log_i("Manual change of dog %i fault to ON afer %lld ms.", iDogNumber + 1, llManualFaultTimestamp / 1000);
-         double dManualFaultTime = ((long long)(llManualFaultTimestamp + 50000) / 100000) / 10.0;
-         std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
-         strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
-         _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
-         // log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
+         bCalculateManualFaultTimestamp = true;
+         log_i("Manual change of dog %i fault to ON.", iDogNumber + 1);
       }
       else
       {
          _bDogDetectedManualFaults[iDogNumber][iDogRunCounters[iDogNumber]] = false;
+         bCalculateManualFaultTimestamp = true;
          log_i("Manual change of dog %i fault to OFF.", iDogNumber + 1);
-         double dManualFaultTime = ((long long)(llManualFaultTimestamp + 50000) / 100000) / 10.0;
-         std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
-         strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
-         _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
-         // log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
       }
    }
    else if (State == ON) // only autodetected faults are handled by this
@@ -1220,7 +1228,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If crossing fault detected of next dog then set fake time flag for current dog
       if ((iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)) && !_bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]])
       {
-        _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+         _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
          LCDController.bUpdateThisLCDField[iCurrentDog] = true;
 #ifdef WiFiON
          WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
@@ -1253,6 +1261,17 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 #ifdef WiFiON
    WebHandler.bUpdateThisRaceDataField[iDogNumber + 4] = true;
 #endif
+
+   if (bCalculateManualFaultTimestamp)
+   {
+      bCalculateManualFaultTimestamp = false;
+      long long llManualFaultTimestamp = MICROS - llRaceStartTime;
+      double dManualFaultTime = ((long long)(llManualFaultTimestamp + 50000) / 100000) / 10.0;
+      std::string strManualFaultTimestamp = std::to_string(dManualFaultTime);
+      strManualFaultTimestamp = strManualFaultTimestamp.substr(0, strManualFaultTimestamp.find(".") + 2);
+      _strManualFaultsRecords += strManualFaultTimestamp + ";d" + std::to_string(iDogNumber + 1) + "f;";
+      // log_d("ManualFaultsString: %s", _strManualFaultsRecords.c_str());
+   }
 }
 
 /// <summary>
@@ -1324,51 +1343,52 @@ String RaceHandlerClass::GetRaceTime()
       dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
    }
    strRaceTimeSeconds = cRaceTimeSeconds;
-   if (bRaceStoppedManually && (!_bAccuracy3digits || (_bAccuracy3digits && dRaceTimeSeconds < 100)))
-      strRaceTimeSeconds[0] = '#';
+   if (bRaceStoppedManually)
+   {
+      _strRaceManualStopTime = strRaceTimeSeconds;
+      strRaceTimeSeconds = "     nt";
+   }
    return strRaceTimeSeconds;
 }
 
 /// <summary>
-///   Supporting alternate function of multiple dog results.
+///   Gets team Clean Time in seconds.
+///   In case of heat would have a fault(s) Clean Time will not be displayed as it has no meaning.
+///   In such situation "nt" will be shown.
+///   Please mark that "Cleat Time" term is often use in the meaning of Clean Time Breakout.
+///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
 /// </summary>
-///
-/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
-/// <param name="iRunNumber"> Zero-based index of the run number. If -1 is passed, this function
-///                           will alternate between each run we have for the dog, passing a new
-///                           run every 2 seconds. If -2 is passed, the last run number we have
-///                           for this dog will be passed. </param>
-///
-/// <returns>
-///   Transformed iRunNumber.
-/// </returns>
-int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
+String RaceHandlerClass::GetCleanTime()
 {
-   if (iDogRunCounters[iDogNumber] > 0)
+   String strCleanTime;
+   if (!_bNoValidCleanTime)
    {
-      // We have multiple times for this dog.
-      // if run number is -1 (unspecified), we have to cycle throug them
-      if (iRunNumber == -1 && ((iDogNumber != iCurrentDog) || (iDogNumber == iCurrentDog && RaceState == STOPPED)))
+      long long llTotalNetTime = 0;
+      for (auto &Dog : _llDogTimes)
       {
-         auto &ulLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
-         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((millis() - ulLastReturnedTimeStamp) > 2000)
+         for (auto &llNetTime : Dog)
          {
-            if (iRunNumber == iDogRunCounters[iDogNumber])
-               iRunNumber = 0;
-            else
-               iRunNumber++;
-            _llLastDogTimeReturnTimeStamp[iDogNumber] = millis();
+            if (llNetTime > 0)
+               llTotalNetTime += llNetTime;
          }
-         _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
+      }
+      char cCleanTime[8];
+      double dCleanTime;
+      if (!_bAccuracy3digits)
+      {
+         dCleanTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
+         dtostrf(dCleanTime, 7, 2, cCleanTime);
       }
       else
-         // if RunNumber is not -1 it means we should return the last one
-         iRunNumber = iDogRunCounters[iDogNumber];
+      {
+         dCleanTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
+         dtostrf(dCleanTime, 7, 3, cCleanTime);
+      }
+      strCleanTime = cCleanTime;
    }
-   else if (iRunNumber < 0)
-      iRunNumber = 0;
-   return iRunNumber;
+   else
+      strCleanTime = "     nt";
+   return strCleanTime;
 }
 
 /// <summary>
@@ -1592,6 +1612,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       strCrossingTime = "     ok";
    else if (_bDogDetectedFaults[iDogNumber][iRunNumber])
       strCrossingTime = "  fault";
+   else if (_bNoValidCrossingTime[iDogNumber][iRunNumber])
+      strCrossingTime = "     nt";
    else
       strCrossingTime = " ";
 
@@ -1608,7 +1630,6 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       else
          strCrossingTime[0] = 'F';
    }
-
    if (_bAccuracy3digits && strCrossingTime.length() == 7)
       strCrossingTime = " " + strCrossingTime;
 
@@ -1642,43 +1663,45 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber, int8_t iRunNumber)
 }
 
 /// <summary>
-///   Gets team Clean Time in seconds.
-///   In case of heat would have a fault(s) Clean Time will not be displayed as it has no meaning.
-///   In such situation "n/a" will be shown.
-///   Please mark that "Cleat Time" term is often use in the meaning of Clean Time Breakout.
-///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
+///   Supporting alternate function of multiple dog results.
 /// </summary>
-String RaceHandlerClass::GetCleanTime()
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+/// <param name="iRunNumber"> Zero-based index of the run number. If -1 is passed, this function
+///                           will alternate between each run we have for the dog, passing a new
+///                           run every 2 seconds. If -2 is passed, the last run number we have
+///                           for this dog will be passed. </param>
+///
+/// <returns>
+///   Transformed iRunNumber.
+/// </returns>
+int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   String strCleanTime;
-   if (!_bNoValidCleanTime)
+   if (iDogRunCounters[iDogNumber] > 0)
    {
-      long long llTotalNetTime = 0;
-      for (auto &Dog : _llDogTimes)
+      // We have multiple times for this dog.
+      // if run number is -1 (unspecified), we have to cycle throug them
+      if (iRunNumber == -1 && ((iDogNumber != iCurrentDog) || (iDogNumber == iCurrentDog && RaceState == STOPPED)))
       {
-         for (auto &llNetTime : Dog)
+         auto &ulLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         if ((millis() - ulLastReturnedTimeStamp) > 2000)
          {
-            if (llNetTime > 0)
-               llTotalNetTime += llNetTime;
+            if (iRunNumber == iDogRunCounters[iDogNumber])
+               iRunNumber = 0;
+            else
+               iRunNumber++;
+            _llLastDogTimeReturnTimeStamp[iDogNumber] = millis();
          }
-      }
-      char cCleanTime[8];
-      double dCleanTime;
-      if (!_bAccuracy3digits)
-      {
-         dCleanTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
-         dtostrf(dCleanTime, 7, 2, cCleanTime);
+         _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
       else
-      {
-         dCleanTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
-         dtostrf(dCleanTime, 7, 3, cCleanTime);
-      }
-      strCleanTime = cCleanTime;
+         // if RunNumber is not -1 it means we should return the last one
+         iRunNumber = iDogRunCounters[iDogNumber];
    }
-   else
-      strCleanTime = "    n/a";
-   return strCleanTime;
+   else if (iRunNumber < 0)
+      iRunNumber = 0;
+   return iRunNumber;
 }
 
 /// <summary>

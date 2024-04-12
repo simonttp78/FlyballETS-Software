@@ -8,5 +8,5 @@ Dog 3:   4.004 | CR: +  0.196
 Dog 4:   4.333 | CR:    fault
 Dog 4:   3.657 | CR: +  0.247
  Team:  34.973
-   CT:     n/a
+   CT:      nt
   

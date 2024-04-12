@@ -45,8 +45,8 @@ Aktualizacja była testowana na przeglądarkach Chrome oraz Safari. Paski postę
 ## Wyświetlacz LCD
 - W trakcie uruchamiania na ekranie LCD wyświetlana jest wersja firmware'u
 - Dokładność wyświetlanych czasów może być z dokładnością do 3 lub 2 miejsc po przecinku. Zmiana przy pomocy przycisku "mode / tryb"
-- Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "n/a".
-- Jeśli bieg został zatrzymany ręcznie, czas drużyny (Team) jest nieważny i poprzedzony znakiem "#" 
+- Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "nt" (no time).
+- Jeśli bieg został zatrzymany ręcznie, czas drużyny (Team) jest nieważny więc wyświetlony zostanie "nt" (no time) 
 - Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony znakiem "#"
 - Jeśli błąd psa został zaznaczony ręcznie (np. pies nie doniósł piłki) czas dobiegu/krosa będzie poprzedzony literką "F" oznaczającą błąd (Fault), 
 - W prawym górnym rogu wyświetlany jest nr biegu. Ten numer zapisany jest też na karcie SD. Służy do identyfikacji biegu
@@ -172,7 +172,7 @@ Ponieważ konstrukcja systemu bazuje na zasadzie działania EJSa, to dziedziczy 
 - Analogicznie ma się sprawa z bezbłędnymi krosami. System analizuje wyłącznie przecięcia wiązek, ale nie wie, który pies przecina linię startu/mety lub kiedy dokładnie to robi, bo drugi pies już mógł "zakryć" wiązki. Z tego też powodu większość krosów do ok. 0.10s będzie rozpoznawany jako "OK" lub "ok", przy czym małe "ok" jest w większości przypadków nieco gorszym krosem.
 - Wyjątek od powyższej reguły stanowi bardzo mały kros, poniżej 6ms. Wówczas z ograniczeń fizycznych wiadomo, że po przecięciu linii kierunku (tej od boksu) to nabiegający pies musiał przeciąć linię startu mety (powracający nie zdążyłby tego zrobić). W takiej sytuacji system wyświetli "Perfect".
 - Podobnie jak w EJSie błąd psa powoduje, że czas psa poprzedniego jest zakłamany i nie należy go uwzględniać w statystykach (czas jest poprzedzony znakeim '#')
-- Clean Time ma sens wyłącznie dla bezbłędnych przebiegów, dlatego w innym przypadku jest brak wartości "n/a"
+- Clean Time ma sens wyłącznie dla bezbłędnych przebiegów, dlatego w innym przypadku brak czasu "nt" (no time)
 
 Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza zakres tej instrukcji, ciągle mamy wiele pozytywnych funkcji czasami niedostępnych w systemach EJS, np.:
 - kompaktowość, łatwość instalacji

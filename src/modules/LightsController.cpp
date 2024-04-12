@@ -88,7 +88,7 @@ void LightsControllerClass::Main()
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; // Delete schedule
 #ifdef WiFiON
-         if (i < 2)
+         if (i < 2) // solution to assure fault light off
          {
             WebHandler.bSendLightsAndRaceData = true;
             // log_d("UpdateLights i<2");
@@ -230,15 +230,6 @@ void LightsControllerClass::DeleteSchedules()
 void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLightState)
 {
    bool byCurrentLightState = CheckLightState(byLight);
-   if (byLightState == TOGGLE)
-   {
-      // We have to toggle the lights
-      if (byCurrentLightState == ON)
-         byLightState = OFF;
-      else
-         byLightState = ON;
-   }
-
    SNeoPixelConfig LightConfig = _GetNeoPixelConfig(byLight);
 
    if (byLightState == OFF)

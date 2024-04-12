@@ -112,6 +112,7 @@ private:
    bool _bDogManualFaults[4];
    bool _bDogDetectedFaults[5][4];
    bool _bDogDetectedManualFaults[4][4];
+   bool _bNoValidCrossingTime[4][4];
    bool _bDogPerfectCross[5][4];
    bool _bDogBigOK[5][4];
    bool _bDogSmallok[5][4];
@@ -136,7 +137,8 @@ private:
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
-   std::string _strManualFaultsRecords = "//$commands;";
+   std::string _strManualFaultsRecords = "// $commands;";
+   String _strRaceManualStopTime;
 
    enum _byDogStates
    {

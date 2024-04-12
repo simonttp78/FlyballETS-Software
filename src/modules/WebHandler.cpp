@@ -478,7 +478,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
-         /*uint8_t iId = 0;
+        // log_d("Generic Race Data update.");
+        /*uint8_t iId = 0;
          for (auto &isConsumer : _bIsConsumerArray)
          {
             if (isConsumer)
