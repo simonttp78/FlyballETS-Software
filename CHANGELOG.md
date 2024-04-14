@@ -266,7 +266,7 @@ All notable changes to this project will be documented in this file.
 
 
 [unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...HEAD
-[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
+[1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0
