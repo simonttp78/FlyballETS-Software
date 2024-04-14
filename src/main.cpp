@@ -84,6 +84,7 @@ void setup()
 
    // Print SW version
    Serial.printf("Firmware version: %s\r\n", FW_VER);
+   Serial.printf("FW compilation date: %s\r\n",__DATE__);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -156,33 +157,41 @@ void setup()
 
 void loop()
 {
-   // Exclude handling of those services in loop while race is running
-   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+   if (!WebHandler.bFwUpdateInProgress)
    {
-      // Handle settings manager loop
-      SettingsManager.loop();
+      // Exclude handling of those services in loop while race is running
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         // Handle settings manager loop
+         SettingsManager.loop();
 
 
-      // Handle GPS
-      GPSHandler.loop();
+         // Handle GPS
+         GPSHandler.loop();
 
-      // Handle battery sensor main processing
-      BatterySensor.CheckBatteryVoltage();
+         // Handle battery sensor main processing
+         BatterySensor.CheckBatteryVoltage();
 
-      // Check SD card slot (card inserted / removed)
-      SDcardController.CheckSDcardSlot(iSDdetectPin);
+         // Check SD card slot (card inserted / removed)
+         SDcardController.CheckSDcardSlot(iSDdetectPin);
+      }
+
+      // Check for serial events
+      serialEvent();
+      // Handle serial console commands
+
+      if (bSerialStringComplete)
+         HandleSerialCommands();
+
+      // Handle remote control and buttons states
+      HandleRemoteAndButtons();
    }
-
-   // Check for serial events
-   serialEvent();
-   // Handle serial console commands
-
-   if (bSerialStringComplete)
-      HandleSerialCommands();
-
-   // Handle remote control and buttons states
-   HandleRemoteAndButtons();
-
+   else
+   {
+      vTaskSuspend(taskRace);
+      vTaskSuspend(taskLights);
+   }
+   
    // Handle LCD processing
    LCDController.Main();
 
@@ -449,6 +458,9 @@ void HandleSerialCommands()
    // Toggle wifi on/off
    if (strSerialData == "fwver")
       Serial.printf("Firmware version: %s\r\n", FW_VER);
+   // Factory Reset
+   if (strSerialData == "factoryreset")
+      FactoryReset();
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)
@@ -549,7 +561,7 @@ void HandleRemoteAndButtons()
             }
          }
          // Actions for LONG button press
-         else if (llPressDuration > SHORT_PRESS_TIME)
+         else if (llPressDuration > SHORT_PRESS_TIME && llPressDuration <= VERYLONG_PRESS_TIME)
          {
             log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3) // Dog 1 fault RC button - toggling reruns off/on
@@ -561,6 +573,12 @@ void HandleRemoteAndButtons()
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
                ToggleWifi();
          }
+         else if (llPressDuration > VERYLONG_PRESS_TIME)
+         {
+            log_d("%s VERY LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Factory Reset (NVM re-init)
+               FactoryReset();
+         }
       }
    }
    // Laser deativation
@@ -571,6 +589,19 @@ void HandleRemoteAndButtons()
       log_i("Turn Laser OFF.");
    }
 }
+
+/// <summary>
+///   Factory Reset - erasing and initializing NVM.
+/// </summary>
+void FactoryReset()
+{
+   Serial.println("Trying to erse all NVS flash...");
+   if (nvs_flash_erase() != ESP_OK) Serial.println("===> Error with Flash Erase.");
+   if (nvs_flash_init() != ESP_OK) Serial.println("===> Error with Flash INIT.");
+   vTaskDelay(1000);
+   ESP.restart();
+}
+
 
 /// <summary>
 ///   Gets pressed button string for consol printing.
@@ -647,3 +678,4 @@ void Core1Lights(void *parameter)
       vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }*/
+

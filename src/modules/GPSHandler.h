@@ -12,6 +12,7 @@ class GPSHandlerClass
 {
 private:
    bool _bGSPconnected = false;
+   int _iCompilationYear;
 
 protected:
    TinyGPSPlus _Tgps;

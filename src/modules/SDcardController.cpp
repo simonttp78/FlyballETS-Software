@@ -73,7 +73,8 @@ void SDcardControllerClass::init()
          {
             createDir(SD_MMC, "/SENSORS_DATA");
          }
-         listDir(SD_MMC, "/", 1);
+         listDir(SD_MMC, "/", 0);
+         listDir(SD_MMC, "/SENSORS_DATA", 0);
          vTaskDelay(200);
 
          // Check last tag value and increase it by one or create new tag.txt file with initial value 1
@@ -115,7 +116,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       UpdateTagFile();
       raceDataFileName = "/" + sTagValue + "_ETS_" + sDate + ".csv";
       writeFile(SD_MMC, raceDataFileName.c_str(),
-                "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs turned OFF?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Clean time;Comments\n");
+                "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Clean time;Comments\n");
    }
    raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
    if (raceDataFile)
@@ -131,9 +132,9 @@ void SDcardControllerClass::SaveRaceDataToFile()
       raceDataFile.print(RaceHandler.iNumberOfRacingDogs);
       raceDataFile.print(";");
       if (RaceHandler.bRerunsOff)
-         raceDataFile.print("yes");
+         raceDataFile.print("off");
       else
-         raceDataFile.print("no");
+         raceDataFile.print("on");
       raceDataFile.print(";");
       if (!_bCommaInCsv)
       {
@@ -268,12 +269,14 @@ void SDcardControllerClass::listDir(fs::FS &fs, const char *dirname, uint8_t lev
          Serial.print("  SIZE: ");
          Serial.println(file.size());
          i++;
+         // for www interface:
          String st_after_symb = String(file.name()).substring(String(file.name()).indexOf("/") + 1);
          partlist +=  String("<tr><td>") + String(i) + String("</td><td>") + String("<a href='") + String(file.name()) + String("'>") + st_after_symb + String("</td><td>") + String(file.size() / 1024) + String("</td><td>") + String("<input type='button' class='btndel' onclick=\"deletef('") + String(file.name()) + String("')\" value='X'>") + String("</td></tr>");
          filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
       }
       file = root.openNextFile();
    }
+   // for www interface
    filelist = String("<table><tbody><tr><th>#</th><th>File name</th><th>Size(KB)</th><th></th></tr>") + partlist + String(" </tbody></table>");
 }
 

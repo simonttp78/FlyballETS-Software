@@ -40,8 +40,6 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
       color: #333333;
     }
 </style>
-<html lang="en">
-</head>
 <title>FIRMWARE UPDATE</title>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js'></script>
 </head><body>

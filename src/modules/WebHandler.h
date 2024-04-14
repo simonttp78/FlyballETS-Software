@@ -48,7 +48,7 @@ protected:
    bool _wsAuth(AsyncWebSocketClient *client);
    void _onHome(AsyncWebServerRequest *request);
    void _onFavicon(AsyncWebServerRequest *request);
-   void handleDoUpdate(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+   void handleDoUpdate(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final);
    void onProgressRequest(AsyncWebServerRequest *request);
    void onFilesystem(AsyncWebServerRequest *request);
 
@@ -77,10 +77,11 @@ public:
    void loop();
    void disconnectWsClient(IPAddress ipDisconnectedIP);
    void printProgress(size_t prg, size_t sz);
-   bool bUpdateLights = false;
+   bool bSendLightsAndRaceData = false;
    bool bSendRaceData = false;
    bool bUpdateRaceData = false;
    bool bUpdateTimerWebUIdata = false;
+   bool bFwUpdateInProgress = false;
    unsigned int uiLastProgress = 0; // last % OTA progress value
    enum RaceDataFields
    {
@@ -106,7 +107,7 @@ public:
 private:
    uint16_t _iPwrOnTag;
    String _strRunDirection;
-   size_t content_len;             
+   size_t content_len;
    int otaProgress = 0;
 };
 

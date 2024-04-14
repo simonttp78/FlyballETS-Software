@@ -38,13 +38,13 @@ public:
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
    bool bIgnoreSensors = false;
+   bool bRaceStoppedManually = false;
    volatile bool bExecuteStopRace;
    volatile bool bExecuteResetRace;
    volatile bool bExecuteStartRaceTimer;
 
    void Main();
    void StartRaceTimer();
-   void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
    void IRAM_ATTR TriggerSensor1(portMUX_TYPE *spinlock);
@@ -106,11 +106,13 @@ private:
    bool _bSensorNoise = false;
    bool _bLastStringBAba = false;
    bool _bNoValidCleanTime = false;
+   bool _bPrepareToRestoreokCrossing = false;
    bool _bRerunNeeded;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];
    bool _bDogDetectedFaults[5][4];
    bool _bDogDetectedManualFaults[4][4];
+   bool _bNoValidCrossingTime[4][4];
    bool _bDogPerfectCross[5][4];
    bool _bDogBigOK[5][4];
    bool _bDogSmallok[5][4];
@@ -123,10 +125,12 @@ private:
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
+   bool _bPotentialyComingbackOutside;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
    bool _bWrongRunDirectionDetected = false;
-   long long _llLastDogTimeReturnTimeStamp[4];
+   bool _bRaceStopRequested = false;
    int8_t _iLastReturnedRunNumber[4];
+   long long _llLastDogTimeReturnTimeStamp[4];
    long long _llDogEnterTimes[5];
    long long _llDogExitTimes[4];
    long long _llDogTimes[4][4];
@@ -134,7 +138,8 @@ private:
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
-   std::string _strManualFaultsRecords = "$commands;";
+   std::string _strManualFaultsRecords = "// $commands;";
+   String _strRaceManualStopTime;
 
    enum _byDogStates
    {

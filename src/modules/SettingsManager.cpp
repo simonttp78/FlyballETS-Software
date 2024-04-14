@@ -97,7 +97,7 @@ void SettingsManagerClass::setDefaultSettings()
 
    if (!hasSetting("LaserOnTimer"))
    {
-      setSetting("LaserOnTimer", String("60"));
+      setSetting("LaserOnTimer", String("180"));
       saveSettings();
    }
 

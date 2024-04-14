@@ -64,7 +64,6 @@ public:
    {
       OFF,
       ON,
-      TOGGLE
    };
 
    LightStates CheckLightState(Lights byLight);
@@ -72,7 +71,7 @@ public:
    void HandleStartSequence();
    void InitiateStartSequence();
    void WarningStartSequence();
-   void ToggleLightState(Lights byLight, LightStates byLightState = TOGGLE);
+   void ToggleLightState(Lights byLight, LightStates byLightState);
    void ResetLights();
    void DeleteSchedules();
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);

@@ -65,7 +65,8 @@ void WebHandlerClass::init(int webPort)
                { request->send_P(200, "text/plain", SDcardController.filelist.c_str()); });
 
    _server->begin();
-   Update.onProgress([this](size_t prg, size_t sz) -> void { printProgress(prg, sz); });
+   Update.onProgress([this](size_t prg, size_t sz) -> void
+                     { printProgress(prg, sz); });
 
    _lLastRaceDataBroadcast = 0;
    _lLastSystemDataBroadcast = 0;
@@ -87,11 +88,15 @@ void WebHandlerClass::loop()
    unsigned long lCurrentUpTime = millis();
    if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
       bSendRaceData = true;
-   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("bSendRaceData: %i, bSendLightsAndRaceData: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bSendLightsAndRaceData, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
-      if (bUpdateLights)
+      if (bSendLightsAndRaceData)
+      {
+         bSendLightsAndRaceData = false;
          _SendLightsData();
+         _SendRaceData(RaceHandler.iCurrentRaceId, -1);
+      }
       else if (bSendRaceData)
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
       else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && RaceHandler.bIgnoreSensors))
@@ -295,8 +300,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          bUpdateRaceData = true;
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return true;
       }
       else
@@ -326,8 +330,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          // ReturnError = "Race was already stopped!";
          bUpdateTimerWebUIdata = true;
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -343,8 +346,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       {
          // ReturnError = "Race was not stopped, or already in RESET state.";
          bUpdateTimerWebUIdata = true;
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -376,16 +378,14 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       }
       _bIsConsumerArray[Client->id()] = true;
       bUpdateRaceData = true;
-      bSendRaceData = true;
-      bUpdateLights = true;
+      bSendLightsAndRaceData = true;
       return true;
    }
    else if (ActionType == "SetDogs4")
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -398,8 +398,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -412,8 +411,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -426,8 +424,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         bSendRaceData = true;
-         bUpdateLights = true;
+         bSendLightsAndRaceData = true;
          return false;
       }
       else
@@ -461,7 +458,6 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
 
 void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
-   bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    // log_d("Getting Lights state");
    JsonDocument jsonLightsDoc;
@@ -482,7 +478,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       if (iClientId == -1)
       {
          _ws->textAll(std::move(buffer));
-         /*uint8_t iId = 0;
+        // log_d("Generic Race Data update.");
+        /*uint8_t iId = 0;
          for (auto &isConsumer : _bIsConsumerArray)
          {
             if (isConsumer)
@@ -930,6 +927,7 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
    if (!index)
    {
       Serial.println("\nFirmware update initiated.");
+      bFwUpdateInProgress = true;
       LCDController.FirmwareUpdateInit();
       content_len = request->contentLength();
       if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASH))
@@ -947,12 +945,19 @@ void WebHandlerClass::handleDoUpdate(AsyncWebServerRequest *request, const Strin
       request->send(response);
       if (!Update.end(true))
       {
+         LCDController.FirmwareUpdateError();
+         bFwUpdateInProgress = false;
          Update.printError(Serial);
+         vTaskDelay(2000);
+         ESP.restart();
       }
       else
       {
+         LCDController.FirmwareUpdateSuccess();
+         bFwUpdateInProgress = false;
          Serial.println("\nUpdate completed.\r\n");
          Serial.flush();
+         vTaskDelay(2000);
          ESP.restart();
       }
    }
