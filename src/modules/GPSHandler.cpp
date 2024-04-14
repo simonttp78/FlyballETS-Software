@@ -21,12 +21,14 @@ void GPSHandlerClass::_HandleSerialPort()
 
 void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 {
-   GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
-   // vTaskDelay(200);
-   _HandleSerialPort();
+   // extract compilation year as integer:
    std::string strDate = __DATE__;
    strDate.erase(0, strDate.size() - 4);
    _iCompilationYear = stoi(strDate);
+   // GPS initialization
+   GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
+   // vTaskDelay(200);
+   _HandleSerialPort();
    _FormatTime();
    log_i("Initial UTC time:  %s", _cUTCTime);
    log_i("Local system time: %s", _cLocalDateAndTime);

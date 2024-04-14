@@ -384,13 +384,21 @@ void RaceHandlerClass::Main()
             }
             if (iNextDog != 5)
             {
-               // Set fault light for next dog.
-               SetDogFault(iNextDog, ON);
-               LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
-               LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
+               // Set fault light for next dog or prepare for it if current dog has manual fault (potentialy coming back outside the gate)
+               if (_bDogManualFaults[iCurrentDog])
+               {
+                  log_d("Potentialy dog %i comingback outside the gate. Delay fault activation for dog %i.", iCurrentDog + 1, iNextDog + 1);
+                  _bPotentialyComingbackOutside = true;
+               }
+               else
+               {
+                  SetDogFault(iNextDog, ON);
+                  LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
+                  LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
 #ifdef WiFiON
-               WebHandler.bUpdateThisRaceDataField[iNextDog] = true;
+                  WebHandler.bUpdateThisRaceDataField[iNextDog] = true;
 #endif
+               }
             }
             _ChangeDogNumber(iNextDog);
          }
@@ -701,19 +709,31 @@ void RaceHandlerClass::Main()
                log_d("New dog state: COMINGBACK. ABab.");
                // If previous dog has manual fault and current dog has entering fault we assume it's because he missed gate while coming back
                // If however this will be negative cross scenario flag will be deactivated in S1 sensor section
-               if (_bDogManualFaults[iPreviousDog] && _bDogFaults[iCurrentDog])
+               if (_bDogManualFaults[iPreviousDog] && _bPotentialyComingbackOutside)
                {
                   _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = true;
                   _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   _bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                  SetDogFault(iCurrentDog, OFF);
+                  _bPotentialyComingbackOutside = false;
                   _bDogDetectedFaults[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
                   LCDController.bUpdateThisLCDField[iPreviousDog] = true;
 #ifdef WiFiON
                   WebHandler.bUpdateThisRaceDataField[iPreviousDog] = true;
 #endif
-                  log_d("Assumed previous dog missed the gate, so de-activating dog %i fault.", iCurrentDog + 1);
+                  log_d("Assumed previous dog missed the gate, so no fault for dog %i.", iCurrentDog + 1);
                }
+               else if (_bPotentialyComingbackOutside)
+               {
+                  _bPotentialyComingbackOutside = false;
+                  log_d("Previous dog didn't missed the gate so activating fault for dog %i.", iCurrentDog + 1);
+                  SetDogFault(iCurrentDog, ON);
+                  LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+                  LCDController.bUpdateThisLCDField[iCurrentDog + 8] = true;
+#ifdef WiFiON
+                  WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+#endif
+               }
+                  
             }
             else if (_strTransition == "BAba" && !_bNegativeCrossDetected && RaceState != STOPPED) // Typical dog coming back case
             {
@@ -994,6 +1014,7 @@ void RaceHandlerClass::ResetRace()
       _bNextDogFound = false;
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
+      _bPotentialyComingbackOutside = false;
       _bSensorNoise = false;
       _bLastStringBAba = false;
       _bNoValidCleanTime = false;
@@ -1116,12 +1137,10 @@ void RaceHandlerClass::_PrintRaceSummary()
    if (SDcardController.bSDCardDetected)
    {
       SDcardController.SaveRaceDataToFile();
-      //_PrintRaceTriggerRecordsToFile();
+      _PrintRaceTriggerRecordsToFile();
    }
    if (CORE_DEBUG_LEVEL >= ESP_LOG_VERBOSE)
       _PrintRaceTriggerRecords();
-   if (SDcardController.bSDCardDetected)
-      _PrintRaceTriggerRecordsToFile();
 }
 
 /// <summary>
@@ -1343,7 +1362,7 @@ String RaceHandlerClass::GetRaceTime()
       dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
    }
    strRaceTimeSeconds = cRaceTimeSeconds;
-   if (bRaceStoppedManually)
+   if (bRaceStoppedManually || _bWrongRunDirectionDetected)
    {
       _strRaceManualStopTime = strRaceTimeSeconds;
       strRaceTimeSeconds = "     nt";
@@ -1361,7 +1380,7 @@ String RaceHandlerClass::GetRaceTime()
 String RaceHandlerClass::GetCleanTime()
 {
    String strCleanTime;
-   if (!_bNoValidCleanTime)
+   if (!_bNoValidCleanTime && !_bWrongRunDirectionDetected)
    {
       long long llTotalNetTime = 0;
       for (auto &Dog : _llDogTimes)
@@ -1441,7 +1460,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
 
-   if (_bWrongRunDirectionDetected && iDogNumber == 0)
+   if (_bWrongRunDirectionDetected && iDogNumber == 0 && iRunNumber == 0)
       strDogTime = " <-  ->";
    else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
@@ -1483,7 +1502,7 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   if (_bWrongRunDirectionDetected && iDogNumber == 0)
+   if (_bWrongRunDirectionDetected && iDogNumber == 0 && iRunNumber == 0)
       strDogTime = " <-  ->";
    else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
@@ -1602,7 +1621,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    }
    /*else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strCrossingTime = " ";*/
-   else if (_bWrongRunDirectionDetected && iDogNumber == 0)
+   else if (_bWrongRunDirectionDetected && iDogNumber == 0 && iRunNumber == 0)
       strCrossingTime = "  ERROR";
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
       strCrossingTime = "Perfect";

@@ -125,6 +125,7 @@ private:
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
+   bool _bPotentialyComingbackOutside;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
    bool _bWrongRunDirectionDetected = false;
    bool _bRaceStopRequested = false;

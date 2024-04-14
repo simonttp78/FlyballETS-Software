@@ -27,7 +27,8 @@ All notable changes to this project will be documented in this file.
 - refactored structure of simulated races
 - trigger queque lenghts changed from 70 to 110
 - correct false "false" crossing (now value "nt"/no time is shown)for dog entering after previous dog comingback outside the gate
-- in case of no Clean Time "nt" (no time) is displayed instead of "n/a".
+- in case of no Clean Time "nt" (no time) is displayed instead of "n/a"
+- Re-runs presentation on SD card changed to "on" or "off"
 
 ## [1.15.5] - 2023-03-19
 
