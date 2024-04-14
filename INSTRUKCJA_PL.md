@@ -48,7 +48,8 @@ Aktualizacja była testowana na przeglądarkach Chrome oraz Safari. Paski postę
 - Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "nt" (no time).
 - Jeśli bieg został zatrzymany ręcznie, czas drużyny (Team) jest nieważny więc wyświetlony zostanie "nt" (no time) 
 - Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony znakiem "#"
-- Jeśli błąd psa został zaznaczony ręcznie (np. pies nie doniósł piłki) czas dobiegu/krosa będzie poprzedzony literką "F" oznaczającą błąd (Fault), 
+- Jeśli błąd psa został zaznaczony ręcznie (np. pies nie doniósł piłki) czas dobiegu/krosa będzie poprzedzony literką "F" oznaczającą błąd (Fault),
+- Jeśli system rozpozna, że poprzedni pies wrócił poza bramką (outside), to czas krosa dla wbiegającego psa nie istnieje i system wyświetli wartość "nt" (no time) 
 - W prawym górnym rogu wyświetlany jest nr biegu. Ten numer zapisany jest też na karcie SD. Służy do identyfikacji biegu
 - Wartość numeryczna ze znakiem "%" to przybliżony stan naładowania baterii
 - Symbol ">" lub "<" w prawym dolnym rogu oznacza kierunek nabiegania psa. Zalecane jest ustawianie aktywnej części ETSa po prawej stronie patrząc w kierunku boksu.

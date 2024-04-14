@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.16.0] - 2023-04-13
+## [1.16.0] - 2023-04-14
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
@@ -26,7 +26,7 @@ All notable changes to this project will be documented in this file.
 - compilation year used as default year when GPS is not active
 - refactored structure of simulated races
 - trigger queque lenghts changed from 70 to 110
-- correct false "false" crossing (now value "nt"/no time is shown)for dog entering after previous dog comingback outside the gate
+- correct false "false" crossing (now value "nt" - no time is shown) for entering dog after previous dog comingback outside the gate
 - in case of no Clean Time "nt" (no time) is displayed instead of "n/a"
 - Re-runs presentation on SD card changed to "on" or "off"
 
