@@ -24,7 +24,7 @@
 
 #define FW_VER "1.16.0  "         // Flyball ETS firmware version
 
-#define Simulate true             // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define Simulate false            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 60      // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 #define TRIGGER_QUEUE_LENGTH 110  // Number of triggers in the queue
 
