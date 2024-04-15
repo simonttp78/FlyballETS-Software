@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.16.0] - 2023-04-14
+## [1.16.0] - 2023-04-15
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - manual Race stop have no valid time therefore "nt" is shown (no time)
 - added 2s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
 - added correction for last dog in recing doing re-run after it cameback outside the gate (TC56)
+- added correction for false ok/OK crossing of last dog after he cameback (TC58)
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
@@ -266,7 +267,7 @@ All notable changes to this project will be documented in this file.
 
 
 [unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...HEAD
-[1.15.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
+[1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0

@@ -763,7 +763,7 @@ void RaceHandlerClass::Main()
                      log_d("Dog state still COMINGBACK. Dog coming back after negative cross of next dog.");
                   }
                   // If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
-                  else
+                  else if (!_bRaceStopRequested && RaceState == RUNNING) // exclude ok/OK update if last dog came back (fix for Race 58)
                   {
                      if ((_bRerunBusy && _bRerunNeeded))
                         SetDogFault(iCurrentDog, OFF);
