@@ -62,5 +62,5 @@
       "typeinfo": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true,
-   "cmake.configureOnOpen": true
+   "cmake.configureOnOpen": false
 }
