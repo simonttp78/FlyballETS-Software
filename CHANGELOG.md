@@ -7,7 +7,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.16.0] - 2023-04-15
+## [1.16.1] - 2024-05-27
+
+### Added
+- TC59 with going in dog doing fault while comingback do has manual fault due to ball drop
+
+### Changed
+- correction for proper detection of going in dog when previous dog has manual fault due to ball drop
+- fix for long initialization when many files exist in main folder of SD card
+- SDK update. After upgrade to this versiosn Factory Reset is required!
+
+## [1.16.0] - 2024-04-15
 
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
@@ -31,7 +41,7 @@ All notable changes to this project will be documented in this file.
 - in case of no Clean Time "nt" (no time) is displayed instead of "n/a"
 - Re-runs presentation on SD card changed to "on" or "off"
 
-## [1.15.5] - 2023-03-19
+## [1.15.5] - 2024-03-19
 
 ### Added
 - testETS.py v1.1.2 support for second Command (in not nice way, but works)
@@ -266,7 +276,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0

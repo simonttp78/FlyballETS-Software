@@ -2,20 +2,21 @@
     // See http://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
-        "platformio.platformio-ide",
+        "gurumukhi.selected-lines-count",
+        "mechatroner.rainbow-csv",
+        "ms-python.debugpy",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-python.debugpy",
-        "mechatroner.rainbow-csv",
-        "gurumukhi.selected-lines-count"
+        "platformio.platformio-ide"
     ],
     "unwantedRecommendations": [
-        "ms-azuretools.vscode-docker",
         "davidanson.vscode-markdownlint",
-        "vscodevim.vim",
-        "github.vscode-pull-request-github"
+        "github.vscode-pull-request-github",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.cpptools-extension-pack",
+        "vscodevim.vim"
     ]
 }

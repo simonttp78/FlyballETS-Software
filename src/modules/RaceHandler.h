@@ -56,7 +56,7 @@ public:
       ON,
       TOGGLE
    };
-   void SetDogFault(uint8_t iDogNumber, DogFaults State = TOGGLE);
+   void SetDogFault(uint8_t iDogNumber, DogFaults State = TOGGLE, int8_t iPreviousDogNumber = -1);
 
    String GetRaceTime();
    String GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
