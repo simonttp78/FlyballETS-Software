@@ -722,18 +722,6 @@ void RaceHandlerClass::Main()
 #endif
                   log_d("Assumed previous dog missed the gate, so no fault for dog %i.", iCurrentDog + 1);
                }
-               else if (_bPotentialyComingbackOutside)
-               {
-                  _bPotentialyComingbackOutside = false;
-                  log_d("Previous dog didn't missed the gate so activating fault for dog %i.", iCurrentDog + 1);
-                  SetDogFault(iCurrentDog, ON);
-                  LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
-                  LCDController.bUpdateThisLCDField[iCurrentDog + 8] = true;
-#ifdef WiFiON
-                  WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
-#endif
-               }
-                  
             }
             else if (_strTransition == "BAba" && !_bNegativeCrossDetected && RaceState != STOPPED) // Typical dog coming back case
             {
@@ -799,6 +787,17 @@ void RaceHandlerClass::Main()
                   log_d("New dog %i state: COMINGBACK. Uncertain.", iCurrentDog + 1);
                }
             }
+            if (_bPotentialyComingbackOutside)
+            {
+               _bPotentialyComingbackOutside = false;
+               log_d("Previous dog didn't missed the gate so activating fault for dog %i. iPreviousDog is %i.", iCurrentDog + 1, iPreviousDog + 1);
+               SetDogFault(iCurrentDog, ON, iPreviousDog);
+               LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+               LCDController.bUpdateThisLCDField[iCurrentDog + 8] = true;
+#ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+#endif
+            }  
          }
          _strTransition = "";
       }
@@ -1214,11 +1213,13 @@ void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
 ///
 /// <param name="iDogNumber"> Zero-based index of the dog number. </param>
 /// <param name="State">      The state. </param>
-void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
+void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State, int8_t iPreviousDogNumber)
 {
    // Don't process any faults when race is not running
    if (RaceState == STOPPED || RaceState == RESET)
       return;
+   if (iPreviousDogNumber == -1)
+      iPreviousDogNumber = iCurrentDog;
    bool bFault;
    bool bCalculateManualFaultTimestamp = false;
    // Check if we have to toggle. Assumed only manual faults use TOGGLE option
@@ -1247,10 +1248,10 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If crossing fault detected of next dog then set fake time flag for current dog
       if ((iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)) && !_bDogFaultOffAsPreviousDogMissedGateAssumed[iCurrentDog][iDogRunCounters[iCurrentDog]])
       {
-         _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-         LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+         _bDogFakeTime[iPreviousDogNumber][iDogRunCounters[iPreviousDogNumber]] = true;
+         LCDController.bUpdateThisLCDField[iPreviousDogNumber] = true;
 #ifdef WiFiON
-         WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+         WebHandler.bUpdateThisRaceDataField[iPreviousDogNumber] = true;
 #endif
       }
    }
@@ -1466,7 +1467,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
-   else if (dDogTime == 0)
+   else if (dDogTime == 0 && RaceState != RESET)
       strDogTime = "       ";
    else
    {
@@ -1508,7 +1509,7 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
-   else if (dDogTime == 0)
+   else if (dDogTime == 0 && RaceState != RESET)
       strDogTime = "       ";
    else
    {
