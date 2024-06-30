@@ -1509,7 +1509,7 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
-   else if (dDogTime == 0)
+   else if (dDogTime == 0 && RaceState != RESET)
       strDogTime = "       ";
    else
    {

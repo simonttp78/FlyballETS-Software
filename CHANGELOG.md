@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.16.1] - 2024-05-27
+## [1.16.1] - 2024-06-30
 
 ### Added
 - TC59 with going in dog doing fault while comingback do has manual fault due to ball drop
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - correction for proper detection of going in dog when previous dog has manual fault due to ball drop
 - fix for long initialization when many files exist in main folder of SD card
 - SDK update. After upgrade to this versiosn Factory Reset is required!
+- correction for lack of dog time "zero" value after initialization/reset
 
 ## [1.16.0] - 2024-04-15
 
