@@ -7,12 +7,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.16.1] - 2024-06-30
+## [1.17.0] - 2024-06-30
 
 ### Added
 - TC59 with going in dog doing fault while comingback do has manual fault due to ball drop
 
 ### Changed
+- new version of library for parameters storing, causes need to perform factory reset. without it WiFi connection won't be possible
 - correction for proper detection of going in dog when previous dog has manual fault due to ball drop
 - fix for long initialization when many files exist in main folder of SD card
 - SDK update. After upgrade to this versiosn Factory Reset is required!
@@ -277,8 +278,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.1...HEAD
-[1.16.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...v1.16.1
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
 [1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
