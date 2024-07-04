@@ -445,8 +445,8 @@ void RaceHandlerClass::Main()
       ////Handle SENSOR 1 events (handlers side) with gates state DOG IN
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear && iCurrentDog < 5) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
-         // If negative cross detected and S1 crossed above 6ms from S2 crossing
-         if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) > 6000))
+         // If negative cross detected and S1 crossed above 5679us from S2 crossing
+         if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) > 5679))
          {
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             _bPotentialNegativeCrossDetected = false;
@@ -515,8 +515,8 @@ void RaceHandlerClass::Main()
             log_d("Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] + 500) / 1000);
             log_d("Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
          }
-         // Negative cross detected, but S1 was crossed below 6ms from S2 crossing. This can't be a dog and it has to be sensor noise  (fix for simulated race 36 & 37)
-         else if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) <= 6000))
+         // Negative cross detected, but S1 was crossed below 5679us from S2 crossing. This can't be a dog and it has to be sensor noise  (fix for simulated race 36 & 37)
+         else if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) <= 5679))
          {
             _bSensorNoise = true;
             log_d("S2/S1 sensors noise.");
@@ -1844,12 +1844,13 @@ void RaceHandlerClass::_QueueFilter()
    STriggerRecord _PreviousRecord = _InputTriggerQueue[_iInputQueueReadIndex - 1]; // fix for Ultra 15-22
    STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
    STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
+   STriggerRecord _2ndNextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 2];
 
-   // If there are 2 records from the same sensors line and delta time is below 6ms ignore both
+    // If there are 2 records from the same sensors line and delta time is below 5679us, then ignore both
    if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
-       && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
+       && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
    {
-      // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+      // log_d("Next record %lld - Current record %lld = %lld < 5679us.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
       log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
             _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
       log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
@@ -1863,9 +1864,37 @@ void RaceHandlerClass::_QueueFilter()
          // End of array not yet reached, increase index by 2
          _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
    }
+   // If current record (N) and N+2 are from the same line and delta is below 5679us, then ignore both
+   else if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 3) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
+       && (_CurrentRecord.iSensorNumber == _2ndNextRecord.iSensorNumber && _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
+   {
+      // log_d("2ndNext record %lld - Current record %lld = %lld < 5679us.", _2ndNextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2nd-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+            _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2nd-2", _2ndNextRecord.iSensorNumber, _2ndNextRecord.llTriggerTime,
+            _2ndNextRecord.llTriggerTime - llRaceStartTime, _2ndNextRecord.iSensorState);
+
+      // Write middle record (NextRecord) to the Output queque
+      _OutputTriggerQueue[_iOutputQueueWriteIndex] = _NextRecord;
+      // Input Read index has to be increased, check it we should wrap-around
+      if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 3)
+         // Input Read index has reached end of array, start at 0 again
+         _iInputQueueReadIndex = 0;
+      else
+         // End of array not yet reached, increase index by 3
+         _iInputQueueReadIndex = _iInputQueueReadIndex + 3;
+
+      // Output Write index has to be increased, check it we should wrap-around
+      if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         // Output Write index has reached end of array, start at 0 again
+         _iOutputQueueWriteIndex = 0;
+      else
+         // End of array not yet reached, increase index by 1
+         _iOutputQueueWriteIndex++;
+   }
    else
    {
-      // Only one record available or next record is for different line or next record is for same line, but delta is above 6ms. Push record to Output Queue.
+      // Only one record available or next record is for different line or next record is for same line, but delta is above 5679us. Push record to Output Queue.
       // log_d("One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
       // This function copy current record to common interrupt queue
       _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+- MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
+- added TC59 and TC60 related to new filtering algorithm
 
 ## [1.17.0] - 2024-06-30
 
