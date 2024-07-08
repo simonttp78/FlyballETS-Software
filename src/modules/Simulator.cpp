@@ -2636,7 +2636,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {2, 26263700, 0},
    {1, 26281524, 0},
    // Number of records: 48
-   // TestCase 61 (18) --> Race ID: 8 False detection of invisible dog
+   // TestCase 61 (18) --> False detection of invisible dog (152-8)
    // $init;setdogs 2;reruns off;
    {1, 186651, 1},
    {2, 210970, 1},
@@ -2657,7 +2657,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {2, 16147759, 0},
    {1, 16185300, 0},
    // Number of records: 18
-   // TestCase 62 (58) --> Race ID: 35 Manual fault of last dog after crossing S1
+   // TestCase 62 (58) --> Manual fault of last dog after crossing S1 (152-35)
    // $init;setdogs 4;reruns on;
    // $commands;25.9;d4f;
    {1, 259275, 1},
@@ -2719,7 +2719,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {2, 38907832, 0},
    {1, 38933993, 0},
    // Number of records: 58
-   // TestCase 63 (60) --> Race ID: 34
+   // TestCase 63 (60) --> False detection of OK crossing (152-34)
    // $init;setdogs 4;reruns on;
    {1, 19346, 1},
    {2, 45604, 1},
