@@ -274,13 +274,14 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
-      else if ((!bRerunsOff && !_bRerunNeeded && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bRerunNeeded && _bRerunBusy))
-         iNextDog = iCurrentDog;
-      else if (iNextDog != iCurrentDog + 1 && iNextDog < 5)
-         // First runs of every dog, just increase number
+      else if ((!_bRerunNeeded && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bRerunNeeded && _bRerunBusy))
+         iNextDog = iCurrentDog;  
+      else if (iNextDog != iCurrentDog + 1 && iNextDog < 5) // First run of every dog, just increase number
          iNextDog = iCurrentDog + 1;
       if (iNextDogChanged != iNextDog)
          log_d("Next Dog is %i.", iNextDog + 1);
+      
+      
       //--------------------------------------------------------------------------------------------------------------------
       // Handle SENSOR 1 events (handlers side) with gates CLEAR
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear and S1 sensor is HIGH (A)
@@ -423,12 +424,14 @@ void RaceHandlerClass::Main()
             _bRerunBusy = true;
             _ChangeDogNumber(iNextDog);
          }
-         // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
-         else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
-                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
-                   || (_bRerunBusy && iCurrentDog == iNextDog)))
+         // Special case after false detection of "ok/OK crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
+         else if (_byDogState == COMINGBACK && (_bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] || _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]])
+                  && !_bS1StillSafe
+                  && (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
+                      || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+            _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
@@ -436,7 +439,7 @@ void RaceHandlerClass::Main()
             WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
 #endif
             _bPrepareToRestoreokCrossing = true;
-            log_d("False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
+            log_d("False 'ok/OK crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
          // else
          //    log_d("Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
@@ -1231,6 +1234,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State, int8_t i
       {
          _bDogDetectedManualFaults[iDogNumber][iDogRunCounters[iDogNumber]] = true;
          bCalculateManualFaultTimestamp = true;
+         // If manual fault was marked for last dog we need to activate Rerun flag 152-35
+         if (iCurrentDog == iNextDog && !_bRerunBusy)
+            _bRerunBusy = true;
          log_i("Manual change of dog %i fault to ON.", iDogNumber + 1);
       }
       else
@@ -1865,8 +1871,10 @@ void RaceHandlerClass::_QueueFilter()
          _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
    }
    // If current record (N) and N+2 are from the same line and delta is below 5679us, then ignore both
-   else if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 3) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
-       && (_CurrentRecord.iSensorNumber == _2ndNextRecord.iSensorNumber && _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
+   else if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 3) //
+         && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
+         && (_CurrentRecord.iSensorNumber == _2ndNextRecord.iSensorNumber //
+             && _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
    {
       // log_d("2ndNext record %lld - Current record %lld = %lld < 5679us.", _2ndNextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
       log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2nd-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,

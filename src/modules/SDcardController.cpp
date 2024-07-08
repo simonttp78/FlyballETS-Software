@@ -138,7 +138,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       raceDataFile.print(";");
       if (!_bCommaInCsv)
       {
-         for (uint8_t i = 0; i < 4; i++)
+         for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
          {
             for (uint8_t i2 = 0; i2 < 3; i2++)
             {
@@ -155,7 +155,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       else
       {
          String sConvert;
-         for (uint8_t i = 0; i < 4; i++)
+         for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
          {
             for (uint8_t i2 = 0; i2 < 3; i2++)
             {
