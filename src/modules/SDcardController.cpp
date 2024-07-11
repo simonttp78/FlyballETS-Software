@@ -148,6 +148,9 @@ void SDcardControllerClass::SaveRaceDataToFile()
                raceDataFile.print(";");
             }
          }
+         if (RaceHandler.iNumberOfRacingDogs < 4)
+            for (uint8_t i = RaceHandler.iNumberOfRacingDogs; i < 4; i++)
+               raceDataFile.print(";;;;;;");
          raceDataFile.print(RaceHandler.GetRaceTime());
          raceDataFile.print(";");
          raceDataFile.print(RaceHandler.GetCleanTime());
@@ -169,6 +172,9 @@ void SDcardControllerClass::SaveRaceDataToFile()
                raceDataFile.print(";");
             }
          }
+         if (RaceHandler.iNumberOfRacingDogs < 4)
+            for (uint8_t i = RaceHandler.iNumberOfRacingDogs; i < 4; i++)
+               raceDataFile.print(";;;;;;");
          sConvert = RaceHandler.GetRaceTime();
          sConvert.replace(".", ",");
          raceDataFile.print(sConvert);
