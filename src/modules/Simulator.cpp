@@ -2782,7 +2782,41 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {1, 40049059, 1},
    {1, 40061648, 0},
    // Number of records: 60
-   // TestCase 64 (46) --> Temporary 47-7 Dog 1 with manual fault (ball drop). Dog 2 entering with unmeasurable fault
+   // TestCase 64 --> Race ID: 153-13 False detection of invisible dog 4
+   // $init;setdogs 4;reruns off;
+   // $commands;12.3;d2f;21.7;d3f;
+   {1, -341086, 1},
+   {2, -316393, 1},
+   {1, -247297, 0},
+   {2, -222452, 0},
+   {2, 5406630, 1},
+   {1, 5429925, 1},
+   {2, 5489273, 0},
+   {2, 5527187, 1},
+   {1, 5633310, 0},
+   {1, 5636020, 1},
+   {1, 5652080, 0},
+   {2, 5652398, 0},
+   {1, 16625203, 1},
+   {2, 16644544, 1},
+   {1, 16754875, 0},
+   {2, 16784138, 0},
+   {2, 23518931, 1},
+   {1, 23599729, 1},
+   {2, 23782976, 0},
+   {1, 23929604, 0},
+   {1, 28885174, 1},
+   {2, 28907331, 1},
+   {1, 28982337, 0},
+   {2, 29012326, 0},
+   {2, 29036801, 1},
+   {2, 29038570, 0},
+   {2, 33477535, 1},
+   {1, 33490802, 1},
+   {2, 33573627, 0},
+   {1, 33590084, 0},
+   // Number of records: 30
+   // TestCase 65 (46) --> Temporary 47-7 Dog 1 with manual fault (ball drop). Dog 2 entering with unmeasurable fault
    // $init;setdogs 4;reruns off;
    // $commands;3.1;d1f;
    {1, 44115, 1},

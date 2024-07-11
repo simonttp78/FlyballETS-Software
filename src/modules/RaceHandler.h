@@ -107,6 +107,7 @@ private:
    bool _bLastStringBAba = false;
    bool _bNoValidCleanTime = false;
    bool _bPrepareToRestoreokCrossing = false;
+   bool _bWasItBigOK = false;
    bool _bRerunNeeded;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];

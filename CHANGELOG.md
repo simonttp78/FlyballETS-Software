@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - fix for false detection of invisible dog (TC61)
 - fix for missing automatic fault cancelation after last dog that dropped the ball at the gate (manually marked fault) is doing re-run (TC62)
 - fix for false detection of OK crossing due to sensors noise (TC63)
+- fix for false detection of invisible dog 4
 
 ### Changed
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)

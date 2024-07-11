@@ -181,7 +181,14 @@ void RaceHandlerClass::Main()
                }
                else
                {
-                  _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  if (_bWasItBigOK)
+                  {
+                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                     _bWasItBigOK = false;
+                  }   
+                  else
+                     _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                 
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   _bPrepareToRestoreokCrossing = false;
@@ -189,7 +196,7 @@ void RaceHandlerClass::Main()
 #ifdef WiFiON
                   WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
 #endif
-                  log_d("It wasn't 'false ok' crossing. Restoring 'ok' for dog %i.", iCurrentDog + 1);
+                  log_d("It wasn't 'false ok/OK' crossing. Restoring 'ok/OK' for dog %i.", iCurrentDog + 1);
                }
             }
             else
@@ -311,9 +318,10 @@ void RaceHandlerClass::Main()
             // If this is not re-run and last string was BAba and next dog didn't enter yet, we might have fast next dog that is already running
             // and next dog entered gate to early (fault). This is fix for simulated race 40 (74-15).
             // Period between 3.5s and 5.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
+            // Exclude scenario if current dog is 4. Fix for race 64 (153-13)
             // log_d("bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
             if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
-                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
+                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog && iCurrentDog < 3)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -430,8 +438,14 @@ void RaceHandlerClass::Main()
                   && (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
                       || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
-            _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
-            _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+            if (_bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]])
+            {
+               _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+               _bWasItBigOK = true;
+            }
+            else
+               _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+            
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
@@ -1022,6 +1036,7 @@ void RaceHandlerClass::ResetRace()
       _bNoValidCleanTime = false;
       _bWrongRunDirectionDetected = false;
       _bPrepareToRestoreokCrossing = false;
+      _bWasItBigOK = false;
       for (auto &bFault : _bDogFaults)
          bFault = false;
       for (auto &bManualFault : _bDogManualFaults)
