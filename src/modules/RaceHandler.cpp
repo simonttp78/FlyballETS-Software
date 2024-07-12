@@ -111,7 +111,7 @@ void RaceHandlerClass::Main()
    }
 
    // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
+   if ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
    {
       log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, MICROS - llRaceStartTime);
       _QueueFilter();
@@ -140,10 +140,8 @@ void RaceHandlerClass::Main()
    {
       // Get next record from queue
       STriggerRecord STriggerRecord = _QueuePop();
-      // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
-      // For first entering dog filtering is 750ms to cover scenario from simulated race 39.
-      if (_strTransition.length() != 0 && ((MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
-                                           || (MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
+      // If the transition string is not empty and it wasn't updated for 200ms then it was noise and we have to clear it.
+      if (_strTransition.length() != 0 && (MICROS - _llLastTransitionStringUpdate) > 200000)
       {
          if (_byDogState == GOINGIN)
          {
@@ -206,7 +204,6 @@ void RaceHandlerClass::Main()
             }
          }
          _strTransition = "";
-         _bSensorNoise = false;
          _bGatesClear = true;
          log_d("Reset transition strings.");
          log_d("Gate: CLEAR.");
@@ -532,12 +529,6 @@ void RaceHandlerClass::Main()
             log_d("Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] + 500) / 1000);
             log_d("Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
          }
-         // Negative cross detected, but S1 was crossed below 5679us from S2 crossing. This can't be a dog and it has to be sensor noise  (fix for simulated race 36 & 37)
-         else if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) <= 5679))
-         {
-            _bSensorNoise = true;
-            log_d("S2/S1 sensors noise.");
-         }
          else if (_bS1isSafe) // If S2 crossed before S1 (ok or positive cross scenarios)
          {
             // Normal handling for dog coming back or dog going in after S2 crossed safely
@@ -580,7 +571,7 @@ void RaceHandlerClass::Main()
          //    log_d("Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
       //----------------------------------------------------------------------------------------------------------------------
-      // Handle sensor 2 (box side)
+      // Handle sensor 2 (box side) when GATE CLEAR
       if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear S2 sensor is HIGH (B)
       {
          // If this is first dog and S2 was cross within 4.5s from initiating starting sequence
@@ -641,18 +632,10 @@ void RaceHandlerClass::Main()
             // unless this is first dog
             if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3100000)
             {
-               if (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy))
-               {
-                  _bPotentialNegativeCrossDetected = true;
-                  _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
-                  _llS2CrossedUnsafeGetMicrosTime = MICROS; // fix for simulated race 35
-                  log_d("Dog %i potential negative cross detected.", iCurrentDog + 1);
-               }
-               else
-               {
-                  _bSensorNoise = true;
-                  log_d("Entering first dog caused S2 sensor noise.");
-               }
+               _bPotentialNegativeCrossDetected = true;
+               _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
+               _llS2CrossedUnsafeGetMicrosTime = MICROS; // fix for simulated race 35
+               log_d("Dog %i potential negative cross detected.", iCurrentDog + 1);
             }
             else // S2 was triggered after 2s since current dog entry time
             {
@@ -663,7 +646,7 @@ void RaceHandlerClass::Main()
             }
          }
       }
-
+      
       /***********************************
        * The code below handles what we call the 'transition string'
        * It is an algorithm which saves all sensor events in sequence, until it recognizes a pattern.
@@ -713,12 +696,7 @@ void RaceHandlerClass::Main()
                _bLastStringBAba = false;
             // Transition string is 4 characters or longer
             // So we can check what happened
-            if (_bSensorNoise) // fix for simulated race 36
-            {
-               log_d("Sensor noise was detected. Ignore Tstring");
-               _bSensorNoise = false;
-            }
-            else if (_strTransition == "ABab") // Dog going to box
+            if (_strTransition == "ABab") // Dog going to box
             {
                // Change dog state to coming back
                _ChangeDogState(COMINGBACK);
@@ -1031,7 +1009,6 @@ void RaceHandlerClass::ResetRace()
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
       _bPotentialyComingbackOutside = false;
-      _bSensorNoise = false;
       _bLastStringBAba = false;
       _bNoValidCleanTime = false;
       _bWrongRunDirectionDetected = false;
@@ -1867,9 +1844,9 @@ void RaceHandlerClass::_QueueFilter()
    STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
    STriggerRecord _2ndNextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 2];
 
-    // If there are 2 records from the same sensors line and delta time is below 5679us, then ignore both
+   // If there are 2 records from the same sensors line and delta time is below 5679us, then ignore both
    if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
-       && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
+      && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
    {
       // log_d("Next record %lld - Current record %lld = %lld < 5679us.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
       log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
@@ -1889,7 +1866,7 @@ void RaceHandlerClass::_QueueFilter()
    else if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 3) //
          && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
          && (_CurrentRecord.iSensorNumber == _2ndNextRecord.iSensorNumber //
-             && _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
+            && _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5679))
    {
       // log_d("2ndNext record %lld - Current record %lld = %lld < 5679us.", _2ndNextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _2ndNextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
       log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2nd-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,

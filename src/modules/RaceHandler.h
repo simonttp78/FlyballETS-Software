@@ -103,7 +103,6 @@ private:
 
    bool _bAccuracy3digits = false;
    bool _bNextDogFound = false;
-   bool _bSensorNoise = false;
    bool _bLastStringBAba = false;
    bool _bNoValidCleanTime = false;
    bool _bPrepareToRestoreokCrossing = false;

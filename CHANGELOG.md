@@ -13,6 +13,9 @@ All notable changes to this project will be documented in this file.
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
 - added TC59 and TC60 related to new filtering algorithm
 - optimized dogs times write to the SD card
+- TC39 replaced with new scenario
+- changed triggering of QueueFilter
+- filtering after last string update reduced from 350ms to 200ms
 
 ## [1.17.0] - 2024-06-30
 
