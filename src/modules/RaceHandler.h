@@ -34,6 +34,7 @@ public:
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
    uint16_t iCurrentRaceId = 0;
+   int64_t NOW = MICROS;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
@@ -108,6 +109,7 @@ private:
    bool _bPrepareToRestoreokCrossing = false;
    bool _bWasItBigOK = false;
    bool _bRerunNeeded;
+   bool _bClearCurrentDogFault = false;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];
    bool _bDogDetectedFaults[5][4];
@@ -130,6 +132,7 @@ private:
    bool _bWrongRunDirectionDetected = false;
    bool _bRaceStopRequested = false;
    int8_t _iLastReturnedRunNumber[4];
+   long long _llClearFaultTime;
    long long _llLastDogTimeReturnTimeStamp[4];
    long long _llDogEnterTimes[5];
    long long _llDogExitTimes[4];
@@ -160,6 +163,7 @@ private:
    void _PrintRaceSummary();
    void _PrintRaceTriggerRecords();
    void _PrintRaceTriggerRecordsToFile();
+   void _ClearTransitionString();
 };
 
 extern RaceHandlerClass RaceHandler;

@@ -1688,7 +1688,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {2, 23725844, 1},
    {2, 23731639, 0},
    {1, 23750183, 0},
-   // Testcase 39 --> Race ID: False detection of re-run dog 1 entering 153-3
+   // Testcase 39 --> False detection of re-run dog 1 entering 153-3
    // $init;setdogs 4;reruns on;
    {1, -28347, 1},
    {2, -11553, 1},

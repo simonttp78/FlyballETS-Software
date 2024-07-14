@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - fix for missing automatic fault cancelation after last dog that dropped the ball at the gate (manually marked fault) is doing re-run (TC62)
 - fix for false detection of OK crossing due to sensors noise (TC63)
 - fix for false detection of invisible dog 4
+- delay to dog fault switching off, to allow canceling this action when needed
 
 ### Changed
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
@@ -16,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - TC39 replaced with new scenario
 - changed triggering of QueueFilter
 - filtering after last string update reduced from 350ms to 200ms
+- noise filtering refactored (mainly transition string filtering) and NOW introduction
 
 ## [1.17.0] - 2024-06-30
 
