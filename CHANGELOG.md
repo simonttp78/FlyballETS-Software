@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - fix for false detection of OK crossing due to sensors noise (TC63)
 - fix for false detection of invisible dog 4
 - delay to dog fault switching off, to allow canceling this action when needed
+- fix for false detection of negative cross while entering dog had no fault (TC65)
 
 ### Changed
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
@@ -16,8 +17,9 @@ All notable changes to this project will be documented in this file.
 - optimized dogs times write to the SD card
 - TC39 replaced with new scenario
 - changed triggering of QueueFilter
-- filtering after last string update reduced from 350ms to 200ms
+- filtering after last string update reduced from 350ms to 250ms
 - noise filtering refactored (mainly transition string filtering) and NOW introduction
+- Early crossing fault renamed from 'fault' to 'early'
 
 ## [1.17.0] - 2024-06-30
 

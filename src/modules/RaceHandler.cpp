@@ -210,8 +210,8 @@ void RaceHandlerClass::Main()
                _ClearTransitionString();
             }
 
-            // Dog stat comingback and transition string wasn't updated since 200ms.
-            else if ((NOW - _llLastTransitionStringUpdate) > 200000)
+            // Dog stat comingback and transition string wasn't updated since 250ms.
+            else if ((NOW - _llLastTransitionStringUpdate) > 250000)
             {
                // Coming back dog caused S1 sensor noise after gate clear detection (simulated race 21 & 37)
                // excluding case after early cross. Fix for TC48 (A-106-13)
@@ -330,7 +330,7 @@ void RaceHandlerClass::Main()
             if (STriggerRecord.llTriggerTime < llRaceStartTime)
             {
                SetDogFault(iCurrentDog, ON);
-               log_i("Dog 1 FALSE START!");
+               log_i("Dog 1 False start!");
             }
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
 #ifdef WiFiON
@@ -401,7 +401,7 @@ void RaceHandlerClass::Main()
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llLastDogExitTime - _llDogEnterTimes[iCurrentDog];
             // Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
-            log_d("Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
+            log_d("Dog %i EARLY as coming back dog was expected.", iNextDog + 1);
             if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bRerunNeeded && !_bRerunBusy && !bRerunsOff) // If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy)                                                                            // or if rerun is busy (and faults still exist)
             {
@@ -660,16 +660,15 @@ void RaceHandlerClass::Main()
          }
          else if (_byDogState == COMINGBACK)
          {
-            // S2 is triggered less than 3.1s after current dog's enter time what means we have potential early (negative) cross
-            // unless this is first dog
-            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3100000)
+            // S2 is triggered less than 3s after current dog's enter with fault what means we have potential negative cross (updated to fix TC65)
+            if (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3000000) && _bDogFaults[iCurrentDog])
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
                _llS2CrossedUnsafeGetMicrosTime = MICROS; // fix for simulated race 35
                log_d("Dog %i potential negative cross detected.", iCurrentDog + 1);
             }
-            else // S2 was triggered after 2s since current dog entry time
+            else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) // S2 was triggered after 2s since current dog entry time
             {
                _bS1isSafe = true;
                _bS1StillSafe = true;
@@ -1678,7 +1677,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    else if (_bDogSmallok[iDogNumber][iRunNumber])
       strCrossingTime = "     ok";
    else if (_bDogDetectedFaults[iDogNumber][iRunNumber])
-      strCrossingTime = "  fault";
+      strCrossingTime = "  early";
    else if (_bNoValidCrossingTime[iDogNumber][iRunNumber])
       strCrossingTime = "     nt";
    else
@@ -1693,7 +1692,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       else if (strCrossingTime == "Perfect")
          strCrossingTime = "F Perfe";
       else if (_llCrossingTimes[iDogNumber][iRunNumber] == 0 && strCrossingTime.length() < 7)
-         strCrossingTime = "F fault";
+         strCrossingTime = "F early";
       else
          strCrossingTime[0] = 'F';
    }
