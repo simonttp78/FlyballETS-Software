@@ -338,7 +338,7 @@ void RaceHandlerClass::Main()
 #endif
          }
          // Normal race handling (positive cross)
-         else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
+         else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe && !_bRaceStopRequested) // updated with fix for 52-40 last dog crossing overwriting
          {
             // If this is not re-run and last string was BAba and next dog didn't enter yet, we might have fast next dog that is already running
             // and next dog entered gate to early (fault). This is fix for simulated race 40 (74-15).
@@ -357,7 +357,10 @@ void RaceHandlerClass::Main()
                // Set crossing time to zero (ok)
                _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+               {
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               }
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
