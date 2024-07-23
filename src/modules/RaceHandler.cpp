@@ -518,7 +518,10 @@ void RaceHandlerClass::Main()
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+               {
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               }
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                if (_bRerunBusy)
@@ -632,6 +635,7 @@ void RaceHandlerClass::Main()
             {
                _llDogEnterTimes[iCurrentDog] = llRaceStartTime;
                _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                if (!_bDogManualFaults[iCurrentDog])
                   SetDogFault(iCurrentDog, ON);
                log_d("Invisible starting dog came back! Set fault and 'run in' as dog time.");
@@ -647,7 +651,10 @@ void RaceHandlerClass::Main()
                // Set crossing time to zero (ok)
                _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+               {
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               }
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
@@ -664,7 +671,7 @@ void RaceHandlerClass::Main()
          else if (_byDogState == COMINGBACK)
          {
             // S2 is triggered less than 3s after current dog's enter with fault what means we have potential negative cross (updated to fix TC65)
-            if (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3000000) && _bDogFaults[iCurrentDog])
+            if (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3000000) && (_bDogFaults[iCurrentDog] || _bDogManualFaults[iPreviousDog]))
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
@@ -1679,10 +1686,10 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       strCrossingTime = "     OK";
    else if (_bDogSmallok[iDogNumber][iRunNumber])
       strCrossingTime = "     ok";
-   else if (_bDogDetectedFaults[iDogNumber][iRunNumber])
-      strCrossingTime = "  early";
    else if (_bNoValidCrossingTime[iDogNumber][iRunNumber])
       strCrossingTime = "     nt";
+   else if (_bDogDetectedFaults[iDogNumber][iRunNumber])
+      strCrossingTime = "  early";
    else
       strCrossingTime = " ";
 
@@ -1694,6 +1701,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime.replace("- ", "F-");
       else if (strCrossingTime == "Perfect")
          strCrossingTime = "F Perfe";
+      else if (_bNoValidCrossingTime[iDogNumber][iRunNumber])
+         strCrossingTime = "F    nt";
       else if (_llCrossingTimes[iDogNumber][iRunNumber] == 0 && strCrossingTime.length() < 7)
          strCrossingTime = "F early";
       else
