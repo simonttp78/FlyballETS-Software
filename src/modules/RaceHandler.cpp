@@ -1419,7 +1419,7 @@ String RaceHandlerClass::GetRaceTime()
       dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
    }
    strRaceTimeSeconds = cRaceTimeSeconds;
-   if (bRaceStoppedManually || _bWrongRunDirectionDetected)
+   if ((bRaceStoppedManually && !_bRaceStopRequested) || _bWrongRunDirectionDetected)
    {
       _strRaceManualStopTime = strRaceTimeSeconds;
       strRaceTimeSeconds = "     nt";
