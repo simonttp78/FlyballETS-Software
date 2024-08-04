@@ -200,13 +200,36 @@ void RaceHandlerClass::Main()
             // If string is "A" or "Aa" and we don't have S2 (B) crossed since 100ms, then it has to be S1 noise
             if (_strTransition.length() == 2 && _strTransition.substring(0) == "Aa" && (NOW - _llLastTransitionStringUpdate) > 100000)
             {
-               if (!_bDogFaults[iCurrentDog])
+               if (!_bDogFaults[iCurrentDog] && !_bPrepareToRestoreokCrossing)
                   _ChangeDogState(GOINGIN);
                if (_bClearCurrentDogFault)
                   _bClearCurrentDogFault = false;
-               _bS1StillSafe = true;
-               _bPrepareToRestoreokCrossing = false;
-               log_d("False entering dog detected with 'Aa' noise. S1 is safe.");
+               if (_bPrepareToRestoreokCrossing)
+               {
+                  if (_bWasItBigOK)
+                  {
+                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                     _bWasItBigOK = false;
+                  }   
+                  else
+                     _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               
+                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                  _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+                  _bPrepareToRestoreokCrossing = false;
+                  LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+               #ifdef WiFiON
+                  WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+               #endif
+                  _bPrepareToRestoreokCrossing = false;
+                  _bS1StillSafe = false;
+                  log_d("It wasn't 'false ok/OK' crossing. Restoring 'ok/OK' for dog %i.", iCurrentDog + 1);
+               }
+               else
+               {
+                  _bS1StillSafe = true;
+                  log_d("False entering dog detected with 'Aa' noise. S1 is safe.");
+               }
                _ClearTransitionString();
             }
 
@@ -361,8 +384,8 @@ void RaceHandlerClass::Main()
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                }
-               else // This is true invisible dog case so treated as big OK cross
-                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               else // This is true invisible dog case so treated as Invisible Ok cross
+                  _bDogInvisibleOk[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
 #ifdef WiFiON
                WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
@@ -522,8 +545,8 @@ void RaceHandlerClass::Main()
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                }
-               else // This is true invisible dog case so treated as big OK cross
-                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               else // This is true invisible dog case so treated as Invisible Ok cross
+                  _bDogInvisibleOk[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                if (_bRerunBusy)
                {
                   iDogRunCounters[iNextDog]++; // Increase run counter for next dog
@@ -533,7 +556,7 @@ void RaceHandlerClass::Main()
                   WebHandler.bUpdateThisRaceDataField[iNextDog] = true;
 #endif
                }
-               log_d("Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
+               log_d("Invisible dog %i came back! Dog times updated. Ok or Perfect crossing.", iNextDog + 1);
                SetDogFault(iNextDog, ON);
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
 #ifdef WiFiON
@@ -655,9 +678,9 @@ void RaceHandlerClass::Main()
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   _bNoValidCrossingTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                }
-               else // This is true invisible dog case so treated as big OK cross
-                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-               log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
+               else // This is true invisible dog case so treated as Invisible Ok cross
+                  _bDogInvisibleOk[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               log_d("Invisible dog %i came back!. Update enter time. Ok or Perfect crossing.", iCurrentDog + 1);
             }
             _bS1isSafe = true;
             _bS1StillSafe = true;
@@ -1105,6 +1128,11 @@ void RaceHandlerClass::ResetRace()
       {
          for (auto &bDogSmallok : Dog)
             bDogSmallok = false;
+      }
+      for (auto &Dog : _bDogInvisibleOk)
+      {
+         for (auto &bDogInvisibleOk : Dog)
+            bDogInvisibleOk = false;
       }
       for (auto &Dog : _bDogFakeTime)
       {
@@ -1611,7 +1639,8 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   * positive cross value rounded up or down
 ///   * ok - good un-measurable cross
 ///   * Perfect - perfect cross with S1 crossed below 5ms after S2 have been crossed
-///   * OK - goon un-measurable cross with string BAab or invisible dog run in secnario (BAba)
+///   * OK - good un-measurable cross with string BAab
+///   * Ok - good un-measurable cross with invisible dog run in secnario (BAba)
 ///   * negative cross value - measurable fault rounded up or down
 ///   * fault - un-measurable fault
 ///   * "empty" - if no crossing time available / possible
@@ -1682,6 +1711,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       strCrossingTime = "  ERROR";
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
       strCrossingTime = "Perfect";
+   else if (_bDogInvisibleOk[iDogNumber][iRunNumber])
+      strCrossingTime = "     Ok";
    else if (_bDogBigOK[iDogNumber][iRunNumber])
       strCrossingTime = "     OK";
    else if (_bDogSmallok[iDogNumber][iRunNumber])

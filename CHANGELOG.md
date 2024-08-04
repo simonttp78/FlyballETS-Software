@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - filtering after last string update reduced from 350ms to 250ms
 - noise filtering refactored (mainly transition string filtering) and NOW introduction
 - Early crossing fault renamed from 'fault' to 'early'
+- Invisible entering dog cross changed from 'OK' to 'Ok' for compatibility with Czech EJS
+- Simulated TC15 updated to be more realistic
 
 ## [1.17.0] - 2024-06-30
 
