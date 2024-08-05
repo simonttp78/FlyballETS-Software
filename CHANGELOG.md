@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Early crossing fault renamed from 'fault' to 'early'
 - Invisible entering dog cross changed from 'OK' to 'Ok' for compatibility with Czech EJS
 - Simulated TC15 updated to be more realistic
+- SDK update (6.8.1) + ArduinoJson
 
 ## [1.17.0] - 2024-06-30
 
