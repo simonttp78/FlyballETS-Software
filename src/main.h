@@ -18,6 +18,7 @@
 #include <nvs_flash.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
+//#include <Wire.h>
 //#include <time.h>
 
 // Private libs
@@ -106,9 +107,13 @@ static const uint8_t iBatterySensorPin = 35; // Battery sensor (voltage divider)
 static const uint8_t iLaserOutputPin = 12;   // Laser diodes enable signal
 static const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 
-// Not in use
-// 1: free/TX
-// 3: free/RX
+// Rserved for UART console via USB
+// 1: UART TX
+// 3: UART RX
+
+// I2C test
+//static const uint8_t iI2C_SDA = 1; // 1: i2c SDA line
+//static const uint8_t iI2C_SCL = 3; // 3: i2c SCL line
 
 // Global variables
 bool bCheckWsClinetStatus = false; // flag to check if WS client should be disconnected

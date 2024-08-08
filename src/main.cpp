@@ -38,6 +38,9 @@ IPAddress IPSubnet(255, 255, 255, 0);
 // Statically allocate and initialize the spinlock
 static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
 
+// Define i2c bus
+//TwoWire I2CBus = TwoWire(0);
+
 void setup()
 {
    Serial.begin(115200);
@@ -81,6 +84,9 @@ void setup()
 
    // Configure GPS PPS pin
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
+
+   // Configure i2c bus
+   //I2CBus.begin(iI2C_SDA, iI2C_SCL, 400000);
 
    // Print SW version
    Serial.printf("Firmware version: %s\r\n", FW_VER);
