@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - delay to dog fault switching off, to allow canceling this action when needed
 - fix for false detection of negative cross while entering dog had no fault (TC65)
 - fix for showing 'nt' when race with valid time was manualy stopped before auto-stop kicks in
+- initial support for YD-ESP32-S3
 
 ### Changed
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
