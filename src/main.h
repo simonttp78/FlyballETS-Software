@@ -114,8 +114,10 @@ static const uint8_t iLightsDataPin = 41;    // WS2811B lights data
 // 44: UART RX
 
 // I2C
+#ifdef I2C_ACTIVE
 static const uint8_t iI2C_SDA = 1; // 1: i2c SDA line
 static const uint8_t iI2C_SCL = 2; // 2: i2c SCL line
+#endif
 
 #else // pins definition for ESP32 LoLin32
 // Photoelectric sensors
