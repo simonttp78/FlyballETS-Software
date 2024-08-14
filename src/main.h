@@ -6,6 +6,7 @@
 
 // Public libs
 #include <LiquidCrystal.h>
+#include <LiquidCrystal_PCF8574.h>
 #ifdef WiFiON
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -109,12 +110,12 @@ static const uint8_t iLaserOutputPin = 42;   // Laser diodes enable signal
 static const uint8_t iLightsDataPin = 41;    // WS2811B lights data
 
 // Rserved for UART console via USB
-// 1: UART TX
-// 3: UART RX
+// 43: UART TX
+// 44: UART RX
 
-// I2C test
+// I2C
 static const uint8_t iI2C_SDA = 1; // 1: i2c SDA line
-static const uint8_t iI2C_SCL = 2; // 3: i2c SCL line
+static const uint8_t iI2C_SCL = 2; // 2: i2c SCL line
 
 #else // pins definition for ESP32 LoLin32
 // Photoelectric sensors

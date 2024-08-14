@@ -371,7 +371,7 @@ void LightsControllerClass::ToggleStartingSequence()
       log_i("Starting sequence: NAFA");
    else
       log_i("Starting sequence: FCI");
-   LCDController.reInit();
+   LCDController.DisplayReInit();
 #ifdef WiFiON
    WebHandler.bSendRaceData = true;
 #endif
