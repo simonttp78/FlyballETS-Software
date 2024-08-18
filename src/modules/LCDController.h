@@ -80,7 +80,8 @@ private:
    unsigned long _ulLastLCDUpdate = 0;
    unsigned long _ulLastLCDUpdateWithTimes = 0;
    long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
-   bool bLCDRefresh = false;
+   bool _bLCDRefresh = false;
+   bool _bCriticalBattery = false;
 
    struct SLCDField
    {

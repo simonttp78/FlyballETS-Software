@@ -297,8 +297,18 @@ void LCDControllerClass::_HandleLCDUpdates()
          _SlcdfieldFields[i].bUpdateFlag = true;
    }
 
+   if (_bCriticalBattery)
+   {
+      _UpdateLCD(1, 0, String("    BATTERY level critically LOW !!!    "), 40);
+      _UpdateLCD(2, 0, String("                                        "), 40);
+      _UpdateLCD(3, 0, String("  Turn ETS off and charge the battery!  "), 40);
+      _UpdateLCD(4, 0, String("                                        "), 40);
+      LightsController.bExecuteResetLights = true;
+      vTaskDelay(3000);
+      esp_deep_sleep_start();
+   }
    // Update battery percentage
-   if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
+   else if ((millis() < 4000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
        && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       // uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -308,9 +318,7 @@ void LCDControllerClass::_HandleLCDUpdates()
       {
          sBatteryPercentage = "!!!";
          UpdateField(BattLevel, sBatteryPercentage);
-         LightsController.bExecuteResetLights = true;
-         vTaskDelay(3000);
-         esp_deep_sleep_start();
+         _bCriticalBattery = true;
       }
       else if (iBatteryPercentage == 9911)
          sBatteryPercentage = "USB";

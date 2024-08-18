@@ -139,14 +139,14 @@ void setup()
 #ifdef WiFiON
    // Setup AP
    WiFi.onEvent(WiFiEvent);
-   WiFi.mode(WIFI_AP);
+   WiFi.mode(WIFI_MODE_AP);
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
       log_e("Error initializing softAP!");
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   //log_i("Wifi status: %i", WiFi.status());
 
    // configure webserver
    WebHandler.init(80);
