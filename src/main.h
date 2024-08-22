@@ -19,7 +19,7 @@
 #include <nvs_flash.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
-//#include <Wire.h>
+#include <Wire.h>
 //#include <time.h>
 
 // Private libs
@@ -116,7 +116,7 @@ static const uint8_t iLightsDataPin = 41;    // WS2811B lights data
 // I2C
 #ifdef I2C_ACTIVE
 static const uint8_t iI2C_SDA = 1; // 1: i2c SDA line
-static const uint8_t iI2C_SCL = 2; // 2: i2c SCL line
+static const uint8_t iI2C_SCL = 0; // 0: i2c SCL line
 #endif
 
 #else // pins definition for ESP32 LoLin32

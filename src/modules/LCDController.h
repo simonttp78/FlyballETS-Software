@@ -20,6 +20,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 #include <LiquidCrystal_PCF8574.h>
+#include <Wire.h>
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "BatterySensor.h"
@@ -32,7 +33,7 @@ public:
    bool bUpdateTimerLCDdata = false;
    bool bExecuteLCDUpdate;
    bool bUpdateNonTimerLCDdata = false;
-   void initI2C(int _iI2C_SDA, int _iI2C_SCL);
+   void initI2C();
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void DisplayReInit();
    void FirmwareUpdateInit();

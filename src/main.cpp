@@ -102,9 +102,12 @@ void setup()
    
    // Configure i2c bus and initialize i2c LCD
 #ifdef I2C_ACTIVE
-   LCDController.initI2C(iI2C_SDA, iI2C_SCL);
+   // Initialize i2c bus
+   Wire.setPins(iI2C_SDA, iI2C_SCL);
+   LCDController.initI2C();
 #endif
    // Initialize LCDController class with lcd1 and lcd2 objects
+   //LCDController.PrintSomething();
    LCDController.init(&lcd1, &lcd2);
    /*xTaskCreatePinnedToCore(
       Core1LCD,
@@ -119,7 +122,7 @@ void setup()
 
    // Initialize GPS
    GPSHandler.init(iGPSrxPin, iGPStxPin);
-
+   
    // SD card init
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();

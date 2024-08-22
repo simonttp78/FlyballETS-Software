@@ -44,25 +44,21 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 ///
 /// <param name="Ilcd1">   [in,out] Pointer to first i2c LCD object. </param>
 /// <param name="Ilcd2">   [in,out] Pointer to second i2c LCD object. </param>
-void LCDControllerClass::initI2C(int _iI2C_SDA, int _iI2C_SCL)
+void LCDControllerClass::initI2C()
 {
    // Define i2c LCD (connected using PFC8574A)
    LiquidCrystal_PCF8574 lcd1_i2c(0x20, 0, 2, 4, 5, 6, 7);  // set the LCD address to 0x20
    LiquidCrystal_PCF8574 lcd2_i2c(0x20, 0, 1, 4, 5, 6, 7);  // set the LCD address to 0x20 
    
-   // Initialize i2c bus
-   TwoWire I2CBus = TwoWire(0);
-   I2CBus.begin(_iI2C_SDA, _iI2C_SCL, 400000);
-   
    // Initialize i2c LCD
-   lcd1_i2c.begin(40, 2, I2CBus);
+   lcd1_i2c.begin(40, 2);
    lcd1_i2c.clear();
    lcd1_i2c.setCursor(0, 0);
    lcd1_i2c.print("Test vLCD1 Linia 1");
    lcd1_i2c.setCursor(0, 1);
    lcd1_i2c.print("Test vLCD1 Linia 2");
 
-   lcd2_i2c.begin(40, 2, I2CBus);
+   lcd2_i2c.begin(40, 2);
    lcd2_i2c.clear();
    lcd2_i2c.setCursor(0, 0);
    lcd2_i2c.print("Test vLCD2 Linia 3");
