@@ -57,16 +57,36 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
 /// </summary>
 void LightsControllerClass::Main()
 {
-   if (bExecuteRaceReadyFaultON)
+   if (bS1ExecuteRaceReadyFaultON)
    {
-      ReaceReadyFault(LightsController.ON);
-      bExecuteRaceReadyFaultON = false;
+      if (!_bS2RaceReadyFaultActive)
+         ReaceReadyFault(LightsController.ON);
+      bS1ExecuteRaceReadyFaultON = false;
+      _bS1RaceReadyFaultActive = true;
    }
 
-   if (bExecuteRaceReadyFaultOFF)
+   if (bS2ExecuteRaceReadyFaultON)
    {
-      ReaceReadyFault(LightsController.OFF);
-      bExecuteRaceReadyFaultOFF = false;
+      if (!_bS1RaceReadyFaultActive)
+         ReaceReadyFault(LightsController.ON);
+      bS2ExecuteRaceReadyFaultON = false;
+      _bS2RaceReadyFaultActive = true;
+   }
+
+   if (bS1ExecuteRaceReadyFaultOFF)
+   {
+      if (!_bS2RaceReadyFaultActive)
+         ReaceReadyFault(LightsController.OFF);
+      bS1ExecuteRaceReadyFaultOFF = false;
+      _bS1RaceReadyFaultActive = false;
+   }
+
+   if (bS2ExecuteRaceReadyFaultOFF)
+   {
+      if (!_bS1RaceReadyFaultActive)
+         ReaceReadyFault(LightsController.OFF);
+      bS2ExecuteRaceReadyFaultOFF = false;
+      _bS2RaceReadyFaultActive = false;
    }
 
    if (bExecuteResetLights)

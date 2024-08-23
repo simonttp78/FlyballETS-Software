@@ -1389,9 +1389,9 @@ void IRAM_ATTR RaceHandlerClass::TriggerSensor1(portMUX_TYPE *spinlock)
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-         LightsController.bExecuteRaceReadyFaultON = true;
+         LightsController.bS1ExecuteRaceReadyFaultON = true;
       else
-         LightsController.bExecuteRaceReadyFaultOFF = true;
+         LightsController.bS1ExecuteRaceReadyFaultOFF = true;
    }
    else
    {
@@ -1412,9 +1412,9 @@ void IRAM_ATTR RaceHandlerClass::TriggerSensor2(portMUX_TYPE *spinlock)
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-         LightsController.bExecuteRaceReadyFaultON = true;
+         LightsController.bS2ExecuteRaceReadyFaultON = true;
       else
-         LightsController.bExecuteRaceReadyFaultOFF = true;
+         LightsController.bS2ExecuteRaceReadyFaultOFF = true;
    }
    else
    {

@@ -31,8 +31,10 @@ public:
    void init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip);
 
    bool bModeNAFA = false;
-   volatile bool bExecuteRaceReadyFaultON;
-   volatile bool bExecuteRaceReadyFaultOFF;
+   volatile bool bS1ExecuteRaceReadyFaultON;
+   volatile bool bS2ExecuteRaceReadyFaultON;
+   volatile bool bS1ExecuteRaceReadyFaultOFF;
+   volatile bool bS2ExecuteRaceReadyFaultOFF;
    volatile bool bExecuteResetLights;
 
    // Overal state of this class
@@ -88,6 +90,9 @@ private:
    // This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 255;
    byte _byNewLightsState = 0;
+
+   bool _bS1RaceReadyFaultActive = false;
+   bool _bS2RaceReadyFaultActive = false;
 
    unsigned long _lLightsOnSchedule[8];
    unsigned long _lLightsOutSchedule[8];

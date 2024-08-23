@@ -79,7 +79,7 @@ void LCDControllerClass::_DisplayInit()
    _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME  000"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
    _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |   CT:    0.000"), 40);
-   _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100% W G sd >"), 40);
+   _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  UNK% W G sd >"), 40);
 
    _SlcdfieldFields[D1Time] = {true, 1, 3, 7, String("  0.000")};
    _SlcdfieldFields[D2Time] = {true, 2, 3, 7, String("  0.000")};
@@ -304,7 +304,7 @@ void LCDControllerClass::_HandleLCDUpdates()
       esp_deep_sleep_start();
    }
    // Update battery percentage
-   else if ((millis() < 4000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
+   else if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
        && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       // uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
