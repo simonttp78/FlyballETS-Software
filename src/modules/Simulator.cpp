@@ -2908,8 +2908,37 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[] PROGMEM =
    {2, 23349799, 0},
    {1, 23361324, 1},
    {1, 23364918, 0},
-// Number of records: 64
-  // TestCase 66 --> Temporary 47-7 Dog 1 with manual fault (ball drop). Dog 2 entering with unmeasurable fault
+   // Number of records: 64
+   // TestCase 66 --> Race ID: 61-4 Single, last dog fault re-run overwrites first run
+   // $init;setdogs 1;reruns on;
+   {1, -188578, 1},
+   {2, -169494, 1},
+   {1, -103314, 0},
+   {1, -93997, 1},
+   {1, -86980, 0},
+   {1, -80504, 1},
+   {1, -78659, 0},
+   {2, -74592, 0},
+   {2, -67810, 1},
+   {2, -64372, 0},
+   {2, 3800669, 1},
+   {1, 3815357, 1},
+   {2, 3876404, 0},
+   {2, 3878238, 1},
+   {2, 3883792, 0},
+   {2, 3886305, 1},
+   {1, 3902473, 0},
+   {2, 3907959, 0},
+   {1, 5927109, 1},
+   {2, 6010068, 1},
+   {1, 6109424, 0},
+   {2, 6121617, 0},
+   {2, 9885444, 1},
+   {1, 9899771, 1},
+   {2, 9986315, 0},
+   {1, 9997922, 0},
+   // Number of records: 26
+   // TestCase 67 --> Temporary 47-7 Dog 1 with manual fault (ball drop). Dog 2 entering with unmeasurable fault
    // $init;setdogs 4;reruns off;
    // $commands;3.1;d1f;
    {1, 44115, 1},

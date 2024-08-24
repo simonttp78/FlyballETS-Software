@@ -4,26 +4,36 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+## [1.18.0] - 2024-08-25
+
+### Added
+- added TC59 and TC60 related to new filtering algorithm
 - fix for false detection of invisible dog (TC61)
 - fix for missing automatic fault cancelation after last dog that dropped the ball at the gate (manually marked fault) is doing re-run (TC62)
 - fix for false detection of OK crossing due to sensors noise (TC63)
 - fix for false detection of invisible dog 4
-- delay to dog fault switching off, to allow canceling this action when needed
+- delay of dog fault switching off, to allow canceling this action when needed
 - fix for false detection of negative cross while entering dog had no fault (TC65)
 - fix for showing 'nt' when race with valid time was manualy stopped before auto-stop kicks in
+- fix for false Fault light on in RESET state while nothing in the gate
+- fix for overwriting last dog time when dog had fault and need to rerun (TC66)
+- fix for while fault light on while ETS in reset state and no objects in the gate
 - initial support for YD-ESP32-S3
 
 ### Changed
 - MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
-- added TC59 and TC60 related to new filtering algorithm
 - optimized dogs times write to the SD card
 - TC39 replaced with new scenario
 - changed triggering of QueueFilter
 - filtering after last string update reduced from 350ms to 250ms
-- noise filtering refactored (mainly transition string filtering) and NOW introduction
+- noise filtering refactored (mainly transition string filtering) and 'NOW' introduction
 - Early crossing fault renamed from 'fault' to 'early'
 - Invisible entering dog cross changed from 'OK' to 'Ok' for compatibility with Czech EJS
 - Simulated TC15 updated to be more realistic
+- Improved detection of critically low battery with new message on LCD
 - SDK update (6.8.1) + ArduinoJson
 
 ## [1.17.0] - 2024-06-30
@@ -297,7 +307,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.17.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5
