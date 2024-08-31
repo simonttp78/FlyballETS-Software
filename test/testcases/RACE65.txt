@@ -1,0 +1,6 @@
+$init;setdogs 3;reruns on;
+Dog 1:   4.712 | CR: +  0.089
+Dog 2:   4.345 | CR: +  1.019
+Dog 3:   4.600 | CR: +  0.529
+ Team:  15.293
+   CT:  13.657

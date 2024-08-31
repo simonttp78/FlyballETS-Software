@@ -7,16 +7,45 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+## [1.18.0] - 2024-08-31
+
+### Added
+- added TC59 and TC60 related to new filtering algorithm
+- fix for false detection of invisible dog (TC61)
+- fix for missing automatic fault cancelation after last dog that dropped the ball at the gate (manually marked fault) is doing re-run (TC62)
+- fix for false detection of OK crossing due to sensors noise (TC63)
+- fix for false detection of invisible dog 4
+- delay of dog fault switching off, to allow canceling this action when needed
+- fix for false detection of negative cross while entering dog had no fault (TC65)
+- fix for showing 'nt' when race with valid time was manualy stopped before auto-stop kicks in
+- fix for false Fault light on in RESET state while nothing in the gate
+- fix for overwriting last dog time when dog had fault and need to rerun (TC66)
+- fix for while fault light on while ETS in reset state and no objects in the gate
+- initial support for YD-ESP32-S3
+
+### Changed
+- MAJOR change in filtering algorithm. Filtering threshold changed from 6ms to 5679us (new magic value). Added N+2 filtering for the same beams (S1 or S2)
+- optimized dogs times write to the SD card
+- TC39 replaced with new scenario
+- changed triggering of QueueFilter
+- filtering after last string update reduced from 350ms to 250ms
+- noise filtering refactored (mainly transition string filtering) and 'NOW' introduction
+- Early crossing fault renamed from 'fault' to 'early'
+- Invisible entering dog cross changed from 'OK' to 'Ok' for compatibility with Czech EJS
+- Simulated TC15 updated to be more realistic
+- Improved detection of critically low battery with new message on LCD
+- SDK update (6.8.1) + ArduinoJson
+
 ## [1.17.0] - 2024-06-30
 
 ### Added
-- TC59 with going in dog doing fault while comingback do has manual fault due to ball drop
+- TC59 with going in dog doing fault while coming back do has manual fault due to ball drop
 
 ### Changed
 - new version of library for parameters storing, causes need to perform factory reset. without it WiFi connection won't be possible
 - correction for proper detection of going in dog when previous dog has manual fault due to ball drop
 - fix for long initialization when many files exist in main folder of SD card
-- SDK update. After upgrade to this versiosn Factory Reset is required!
+- SDK update. After upgrade to this version Factory Reset is required!
 - correction for lack of dog time "zero" value after initialization/reset
 
 ## [1.16.0] - 2024-04-15
@@ -24,22 +53,22 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Factory reset option when with very long (above 10s) press of Laser button
 - sending RaceData when sending LightData
-- fix for false detection of "outside" comingback dog when manual fault due to ball drop was marked (TC53)
+- fix for false detection of "outside" coming back dog when manual fault due to ball drop was marked (TC53)
 - fix for false flagging of invalid dog time in case of negative cross after dog with manual fault (TC51)
 - manual Race stop have no valid time therefore "nt" is shown (no time)
 - added 2s waiting time after auto detection of race end to allow manual flagging of last dog fault (e.g. ball drop) (TC54)
-- added correction for last dog in recing doing re-run after it cameback outside the gate (TC56)
-- added correction for false ok/OK crossing of last dog after he cameback (TC58)
+- added correction for last dog in racing doing re-run after it came back outside the gate (TC56)
+- added correction for false ok/OK crossing of last dog after he came back (TC58)
 
 ### Changed
 - restored LCD info about FW update result (successful or ERROR)
 - suspend Light and Race processing during FW update
 - fix for false detection of false 'ok' (TC52)
-- default laser diods activity time changed from 60s to 180s
+- default laser diodes activity time changed from 60s to 180s
 - compilation year used as default year when GPS is not active
 - refactored structure of simulated races
-- trigger queque lenghts changed from 70 to 110
-- correct false "false" crossing (now value "nt" - no time is shown) for entering dog after previous dog comingback outside the gate
+- trigger queue lengths changed from 70 to 110
+- correct false "false" crossing (now value "nt" - no time is shown) for entering dog after previous dog coming back outside the gate
 - in case of no Clean Time "nt" (no time) is displayed instead of "n/a"
 - Re-runs presentation on SD card changed to "on" or "off"
 
@@ -52,7 +81,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - fixed Battery default value in WebUI (v1.1.1)
-- migration from ElegantOTA to open source Web OTA update
+- migration from ElegantOTA to open-source Web OTA update
 - SDK update: PlatfromIO 6.1.13, Espressif32 6.4.0 (6.5.0 has WiFi and Hardwareserial issue)
 - fix for WebIF dog time refresh after negative cross re-calculation
 - battery percentage fix (constant 100% displayed) (bug injected in v1.14.0)
@@ -70,7 +99,7 @@ All notable changes to this project will be documented in this file.
 - Fix for false time indicator "#" replacing first digit when dog time was 100s or higher and accuracy set to 3 digits
 - testETS.py v1.1.1 - improved mid command trigger time accuracy (TC20)
 - Migration to Angular 16 and WebUI update to 1.1.0
-- Battery status in WebUI improved with options "USB" and "LOW" similar to LCD Display
+- Battery status in WebUI improved with options "USB" and "LOW" like LCD Display
 - Battery status "USB" properly displayed while powering standalone ESP32 via USB only
 
 ## [1.13.0] - 2023-08-26
@@ -278,7 +307,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.17.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.15.5...v1.16.0
 [1.15.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...v1.15.5

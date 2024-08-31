@@ -182,4 +182,3 @@ Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza z
 - automatyczna detekcja błędów zmiany
 - możliwość konfigurowania ilości trenujących psów oraz czy trening jest z powtórkami czy bez
 - wygodne zapisywanie danych na karcie SD w formacie CSV
-- czas krosa wyświetlany pomimo ręcznego zaznaczenia błędu psa

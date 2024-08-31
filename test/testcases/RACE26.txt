@@ -1,6 +1,6 @@
 $init;setdogs 3;reruns off;
 Dog 1: # 3.774 | CR: -  0.023
-Dog 2: # 4.079 | CR:    fault
-Dog 3:   3.999 | CR:    fault
+Dog 2: # 4.079 | CR:    early
+Dog 3:   3.999 | CR:    early
  Team:  11.829
    CT:      nt

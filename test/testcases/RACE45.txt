@@ -1,7 +1,7 @@
 $init;setdogs 4;reruns off;
 Dog 1:   4.770 | CR: +  0.028
-Dog 2: # 4.547 | CR:       OK
-Dog 3:   5.518 | CR:    fault
+Dog 2: # 4.383 | CR: +  0.164
+Dog 3:   5.518 | CR:    early
 Dog 4:   4.828 | CR: -  1.392
  Team:  18.298
    CT:      nt

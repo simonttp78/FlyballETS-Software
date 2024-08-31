@@ -19,6 +19,8 @@
 
 #include <Arduino.h>
 #include <LiquidCrystal.h>
+#include <LiquidCrystal_PCF8574.h>
+#include <Wire.h>
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "BatterySensor.h"
@@ -31,8 +33,9 @@ public:
    bool bUpdateTimerLCDdata = false;
    bool bExecuteLCDUpdate;
    bool bUpdateNonTimerLCDdata = false;
+   void initI2C();
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
-   void reInit();
+   void DisplayReInit();
    void FirmwareUpdateInit();
    void FirmwareUpdateProgress(String strNewValue);
    void FirmwareUpdateSuccess();
@@ -68,14 +71,18 @@ public:
    void UpdateField(LCDFields lcdfieldField, String strNewValue);
 
 private:
-   void _UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength);
+   void _UpdateLCD(uint8_t iLine, uint8_t iPosition, String strText, int iFieldLength);
    void _HandleLCDUpdates();
+   void _DisplayInit();
    LiquidCrystal *_Clcd1;
    LiquidCrystal *_Clcd2;
+   LiquidCrystal_PCF8574 lcd1_i2c;
+   LiquidCrystal_PCF8574 lcd2_i2c; 
    unsigned long _ulLastLCDUpdate = 0;
    unsigned long _ulLastLCDUpdateWithTimes = 0;
    long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
-   bool bLCDRefresh = false;
+   bool _bLCDRefresh = false;
+   bool _bCriticalBattery = false;
 
    struct SLCDField
    {

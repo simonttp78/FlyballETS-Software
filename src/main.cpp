@@ -27,7 +27,7 @@
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 // Declare 40x4 LCD by 2 virtual LCDes
-LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  // this will be line 1&2 of 40x4 LCD
+LiquidCrystal lcd1(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  // this will be line 1&2 of 40x4 LCD
 LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); // this will be line 3&4 of 40x4 LCD
 
 // IP addresses declaration
@@ -99,8 +99,16 @@ void setup()
       &taskLights,
       1);
 
+   
+   // Configure i2c bus and initialize i2c LCD
+#ifdef I2C_ACTIVE
+   // Initialize i2c bus
+   Wire.setPins(iI2C_SDA, iI2C_SCL);
+   LCDController.initI2C();
+#endif
    // Initialize LCDController class with lcd1 and lcd2 objects
-   LCDController.init(&lcd, &lcd2);
+   //LCDController.PrintSomething();
+   LCDController.init(&lcd1, &lcd2);
    /*xTaskCreatePinnedToCore(
       Core1LCD,
       "LCD",
@@ -114,7 +122,7 @@ void setup()
 
    // Initialize GPS
    GPSHandler.init(iGPSrxPin, iGPStxPin);
-
+   
    // SD card init
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
@@ -134,14 +142,14 @@ void setup()
 #ifdef WiFiON
    // Setup AP
    WiFi.onEvent(WiFiEvent);
-   WiFi.mode(WIFI_AP);
+   WiFi.mode(WIFI_MODE_AP);
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
       log_e("Error initializing softAP!");
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   //log_i("Wifi status: %i", WiFi.status());
 
    // configure webserver
    WebHandler.init(80);
