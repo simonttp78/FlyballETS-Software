@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.18.0] - 2024-08-25
+## [1.18.0] - 2024-08-31
 
 ### Added
 - added TC59 and TC60 related to new filtering algorithm
