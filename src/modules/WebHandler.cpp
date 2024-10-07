@@ -229,7 +229,10 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       JsonDocument jsonResponseDoc;
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
-      if (request.containsKey("action"))
+      String sAction = request["action"];
+      String sConfig = request["config"];
+      String sGetData = request["getData"];
+      if (sAction != "null")
       {
          JsonObject ActionResult = JsonResponseRoot["ActionResult"].to<JsonObject>();
          String errorText;
@@ -237,7 +240,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
-      else if (request.containsKey("config"))
+      else if (sConfig != "null")
       {
          JsonObject ConfigResult = JsonResponseRoot["configResult"].to<JsonObject>();
          String errorText;
@@ -256,9 +259,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          ConfigResult["success"] = result;
          ConfigResult["error"] = errorText;
       }
-      else if (request.containsKey("getData"))
+      else if (sGetData != "null")
       {
-         String dataName = request["getData"];
+         String dataName = sGetData;
          JsonObject DataResult = JsonResponseRoot["dataResult"].to<JsonObject>();
          JsonObject DataObject = DataResult[dataName + "Data"].to<JsonObject>();
          bool result;
@@ -295,6 +298,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
+   String ActionData = ActionObj["actionData"];
    if (ActionType == "UpdateRace")
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
@@ -358,7 +362,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else if (ActionType == "SetDogFault")
    {
-      if (!ActionObj.containsKey("actionData"))
+      if (ActionData == "null")
       {
          // ReturnError = "No actionData found!";
          return false;
@@ -435,7 +439,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else if (ActionType == "SetRerunsOff")
    {
-      if (!ActionObj.containsKey("actionData") || (RaceHandler.RaceState != RaceHandler.RESET))
+      if ((ActionData == "null") || (RaceHandler.RaceState != RaceHandler.RESET))
       {
          // ReturnError = "No actionData found!";
          return false;
