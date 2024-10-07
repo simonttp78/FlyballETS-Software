@@ -56,19 +56,19 @@
             },
             "serve": {
                "builder": "@angular-devkit/build-angular:dev-server",
-               "options": {
-                  "browserTarget": "flyballets-webui:build"
+              "options": {
+                "buildTarget": "flyballets-webui:build"
                },
                "configurations": {
                   "production": {
-                     "browserTarget": "flyballets-webui:build:production"
+                    "buildTarget": "flyballets-webui:build:production"
                   }
                }
             },
             "extract-i18n": {
                "builder": "@angular-devkit/build-angular:extract-i18n",
-               "options": {
-                  "browserTarget": "flyballets-webui:build"
+              "options": {
+                "buildTarget": "flyballets-webui:build"
                }
             },
             "test": {
