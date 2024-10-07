@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+- SDK update (6.9.0) and PlatformIO 6.1.16
+- new temporary race
 
 ## [1.18.0] - 2024-08-31
 
