@@ -1,0 +1,48 @@
+<!-- <h4>Dog details</h4> -->
+<ul class="list-group">
+   <li *ngFor="let dog of dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
+      <div class="row">
+         <div class="column1">
+            <b>Dog {{dog.dogNr + 1}}</b>
+         </div>
+         <div class="column2"></div>
+         <div class="column3">
+            <div class="d-grid gap-2">
+               <button
+               type="button"
+               *ngIf="!dog.fault"
+               [ngClass]="['btn', 'btn-secondary', 'btn-block', 'btn-sm']"
+               (click)="EmitDogFault(dog.dogNr, !dog.fault)"
+               >
+                  Fault
+               </button>
+               <button
+                  type="button"
+                  *ngIf="dog.fault"
+                  [ngClass]="['btn', 'btn-danger', 'btn-block', 'btn-sm']"
+                  (click)="EmitDogFault(dog.dogNr, !dog.fault)"
+               >
+                  Fault ON
+               </button>
+            </div>
+         </div>
+         <!-- <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline offset-4">
+            <label>
+               <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNr, !dog.fault)">
+               <span>Fault</span>
+            </label>           
+         </div>-->
+      </div>
+      <div *ngFor="let dogTime of dog.timing; let i = index">
+         <ng-container *ngIf="dogTime.crossing != 0 || dogTime.time != 0 || i == 0">
+            <div class="dogsTimes">
+               {{dogTime.time}}
+               <span class="crossing">
+                  {{dogTime.crossing}}<br>
+               </span>
+               
+            </div>
+         </ng-container>
+      </div>
+   </li>
+</ul>
