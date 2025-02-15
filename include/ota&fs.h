@@ -76,7 +76,7 @@ text-decoration: none;border: none;letter-spacing:1.25px;cursor: pointer;text-tr
           if (evt.lengthComputable) {
             var per = evt.loaded / evt.total;
             $('#prg').html('Progress:');
-            $('#bar').css('width',Math.round(per*100) + "%");
+            $('#bar').css('width',Math.round(per*100/5)*5 + "%");
           }
         }, false);
       return xhr;
