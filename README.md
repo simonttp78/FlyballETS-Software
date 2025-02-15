@@ -5,7 +5,7 @@ ETS stands for Electronic Training System and it's kind of Electronic Judging Sy
 
 ## Change log
 
-#### Check [CHANGELOG.md](https://github.com/simonttp78/FlyballETS-Software/blob/master/CHANGELOG.md) file
+#### Check [CHANGELOG.md](https://github.com/simonttp78/FlyballETS-Software/blob/maintain/CHANGELOG.md) file
 
 ## Usage instruction
 - While powering on the system Firmware version is shown on LCD;
